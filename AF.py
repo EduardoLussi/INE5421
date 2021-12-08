@@ -148,6 +148,9 @@ class AF:
 
         return AF(K, sigma, delta, s, F)
 
+    '''
+        Lê os dados do AF a partir de um arquivo
+    '''
     def readData(self, file_name):
         with open(file_name) as f:
             #states
