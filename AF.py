@@ -25,6 +25,26 @@ class AF:
         return transition
 
     '''
+        Reconhecimento de sentença pelo AF
+    '''
+    def compute(self, input):
+        entrada = input
+        currentStates = []
+        currentStates.append(self.s)
+        while len(entrada) > 0:
+            symbol = entrada[0]
+            entrada = entrada[1:]
+            nextStates = []
+            for state in currentStates:
+                transition = self.getTransition(state, symbol)
+                nextStates.extend(transition)
+            currentStates = nextStates
+        for state in currentStates:
+            if (state in self.F):
+                return True
+        return False
+
+    '''
         Imprime autômato
     '''
     def plot(self):
