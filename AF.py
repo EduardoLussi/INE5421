@@ -147,3 +147,51 @@ class AF:
             F[i] = str(f).replace("'", '').replace('[', '{').replace(']', '}')
 
         return AF(K, sigma, delta, s, F)
+
+    def readData(self, file_name):
+        with open(file_name) as f:
+            #states
+            line = f.readline()
+            states = []
+            while True:
+                line = f.readline()
+                if line[0] == '#':
+                    break
+                states.append(line)
+            self.K = states
+
+            #initial
+            self.s = f.readline()
+
+            #accepting
+            f.readline()
+            accepStates = []
+            while True:
+                line = f.readline()
+                if line[0] == '#':
+                    break
+                accepStates.append(line)
+            self.F = accepStates
+
+            #alphabet
+            alphabet = []
+            while True:
+                line = f.readline()
+                if line[0] == '#':
+                    break
+                alphabet.append(line)
+            self.sigma = alphabet
+
+            #transitions
+            fileDelta = []
+            while True:
+                line = f.readline
+                if line[0] == '':
+                    break
+                line = line.split(":")
+                state = line[0]
+                line = line[1].split(">")
+                elem = line[0]
+                nxtState = line[1]
+                fileDelta.append((state, elem, nxtState))
+            self.delta = fileDelta
