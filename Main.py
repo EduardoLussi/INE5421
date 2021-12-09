@@ -26,10 +26,30 @@ F = ['r']
 
 automata = AF(K, sigma, delta, s, F)
 automata.plot()
-
-print(automata.compute("bc"))
-
 automata = automata.getAFD()
 automata.plot()
 
-print(automata.compute("bc"))
+#Exemplo Vídeo aula
+# K = ['q0', 'q1', 'q2']
+# sigma = ['&', '0', '1', '2']
+# delta = [('q0', '0', 'q0'), ('q0', '&', 'q1'), 
+#          ('q1', '1', 'q1'), ('q1', '&', 'q2'), 
+#          ('q2', '2', 'q2')]
+# s = 'q0'
+# F = ['q0']
+
+# automata = AF(K, sigma, delta, s, F)
+# automata.plot()
+
+#print(automata.compute("bc"))
+
+# automata = automata.getAFD()
+# automata.plot()
+
+#print(automata.compute("bc"))
+
+# Exemplo leitura e compute
+# automata = AF()
+# automata.readData("test.txt")
+# automata.plot()
+# print(automata.compute("0001101"))

@@ -145,6 +145,9 @@ class AF:
                 # Obtém transições por epsilon para o novo estado
                 newState = self.getEpsilonTransition(newState)
 
+                if not len(newState):
+                    continue
+
                 # Insere transição convertida para string
                 strk = str(k).replace("'", '').replace('[', '{').replace(']', '}')
                 strNewState = str(newState).replace("'", '').replace('[', '{').replace(']', '}')
