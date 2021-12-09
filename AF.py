@@ -177,20 +177,20 @@ class AF:
             line = f.readline()
             states = []
             while True:
-                line = f.readline()
+                line = f.readline().rstrip('\n')
                 if line[0] == '#':
                     break
                 states.append(line)
             self.K = states
 
             #initial
-            self.s = f.readline()
+            self.s = f.readline().rstrip('\n')
 
             #accepting
             f.readline()
             accepStates = []
             while True:
-                line = f.readline()
+                line = f.readline().rstrip('\n')
                 if line[0] == '#':
                     break
                 accepStates.append(line)
@@ -199,7 +199,7 @@ class AF:
             #alphabet
             alphabet = []
             while True:
-                line = f.readline()
+                line = f.readline().rstrip('\n')
                 if line[0] == '#':
                     break
                 alphabet.append(line)
@@ -208,8 +208,8 @@ class AF:
             #transitions
             fileDelta = []
             while True:
-                line = f.readline
-                if line[0] == '':
+                line = f.readline().rstrip('\n')
+                if line == '':
                     break
                 line = line.split(":")
                 state = line[0]
