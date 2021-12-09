@@ -1,19 +1,19 @@
 from AF import AF
 
 # Miniteste 3 sem epsilon
-K = ['p', 'q', 'r', 's']
-sigma = ['0', '1']
-delta = [('p', '0', 'p'), ('p', '0', 'q'), ('p', '1', 'p'),
-         ('q', '0', 'r'), ('q', '1', 'r'),
-         ('r', '0', 's'),
-         ('s', '0', 's'), ('s', '1', 's')]
-s = 'p'
-F = ['s']
+# K = ['p', 'q', 'r', 's']
+# sigma = ['0', '1']
+# delta = [('p', '0', 'p'), ('p', '0', 'q'), ('p', '1', 'p'),
+#          ('q', '0', 'r'), ('q', '1', 'r'),
+#          ('r', '0', 's'),
+#          ('s', '0', 's'), ('s', '1', 's')]
+# s = 'p'
+# F = ['s']
 
-automata = AF(K, sigma, delta, s, F)
-automata.plot()
-automata = automata.getAFD()
-automata.plot()
+# automata = AF(K, sigma, delta, s, F)
+# automata.plot()
+# automata = automata.getAFD()
+# automata.plot()
 
 # Miniteste 3 com epsilon
 K = ['p', 'q', 'r']
@@ -26,5 +26,10 @@ F = ['r']
 
 automata = AF(K, sigma, delta, s, F)
 automata.plot()
+
+print(automata.compute("bc"))
+
 automata = automata.getAFD()
 automata.plot()
+
+print(automata.compute("bc"))

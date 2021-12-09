@@ -37,6 +37,7 @@ class AF:
             nextStates = []
             for state in currentStates:
                 transition = self.getTransition(state, symbol)
+                transition.extend(self.getEpsilonTransition(transition))
                 nextStates.extend(transition)
             currentStates = nextStates
         for state in currentStates:
@@ -103,19 +104,19 @@ class AF:
 
         print(text)
 
+    # Retorna transições por epsilon a partir de "state"
+    def getEpsilonTransition(self, state):
+        for k in state:
+            epsilonTransition = self.getTransition(k, '&')
+            for t in epsilonTransition:
+                if t not in state:
+                    state.append(t)
+        return state
+
     '''
         A partir de "self", retorna um AFD equivalente
     '''
     def getAFD(self):
-        # Retorna transições por epsilon a partir de "state"
-        def getEpsilonTransition(state):
-            for k in state:
-                epsilonTransition = self.getTransition(k, '&')
-                for t in epsilonTransition:
-                    if t not in state:
-                        state.append(t)
-            return state
-
         K = [[self.s]]
         sigma = self.sigma.copy()
 
@@ -127,7 +128,7 @@ class AF:
         F = []
 
         # Obtém transições por epsilon para o estado inicial
-        K[0] = getEpsilonTransition(K[0])
+        K[0] = self.getEpsilonTransition(K[0])
 
         for k in K: # A cada novo estado
             for symbol in self.sigma:   # Para cada símbolo do alfabeto
@@ -141,7 +142,7 @@ class AF:
                             newState.append(t)
                 
                 # Obtém transições por epsilon para o novo estado
-                newState = getEpsilonTransition(newState)
+                newState = self.getEpsilonTransition(newState)
 
                 # Insere transição convertida para string
                 strk = str(k).replace("'", '').replace('[', '{').replace(']', '}')
