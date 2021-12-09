@@ -31,6 +31,7 @@ class AF:
         entrada = input
         currentStates = []
         currentStates.append(self.s)
+        currentStates.extend(self.getEpsilonTransition(currentStates))
         while len(entrada) > 0:
             symbol = entrada[0]
             entrada = entrada[1:]
