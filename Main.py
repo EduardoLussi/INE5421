@@ -41,6 +41,10 @@ automata.plot()
 # automata = AF(K, sigma, delta, s, F)
 # automata.plot()
 
+# automata = automata.getAFD()
+# automata.plot()
+# print(automata.s, automata.K)
+
 #print(automata.compute("bc"))
 
 # automata = automata.getAFD()

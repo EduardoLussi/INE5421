@@ -125,7 +125,10 @@ class AF:
             sigma.remove('&')
 
         delta = []
-        s = f"{'{'}{self.s}{'}'}"
+        s = f"{'{'}"
+        for state in self.getEpsilonTransition([self.s]):
+            s += f"{state}, "
+        s = s[:-2] + f"{'}'}"
         F = []
 
         # Obtém transições por epsilon para o estado inicial
