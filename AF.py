@@ -226,3 +226,18 @@ class AF:
                 nxtState = line[1]
                 fileDelta.append((state, elem, nxtState))
             self.delta = fileDelta
+
+    '''
+        A partir de "self", retorna um AF minimizado equivalente
+    '''
+    def AFM(self):
+        # Elimina estados inalcancaveis
+        unreachableStates = self.K.copy().remove(self.s)
+        nextStates = [self.s]
+        while nextStates:
+            currentState = nextStates.pop()
+            for transition in [getTransition(currentState, symbol) for symbol in self.sigma]:
+                if transition in unreachableStates:
+                    unreachableStates.remove(transition)
+                    nextStates.append(transition)
+        reachableStates = self.K.copy().remove(unreachableStates)
