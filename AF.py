@@ -25,6 +25,16 @@ class AF:
         return transition
 
     '''
+        Retorna estados que transitam para "state" por "symbol"
+    '''
+    def getReverseTransition(self, state, symbol):
+        transition = []
+        for t in self.delta:
+            if t[2] == state and t[1] == symbol:
+                transition.append(t[0])
+        return transition
+
+    '''
         Reconhecimento de sentença pelo AF
     '''
     def compute(self, input):
@@ -236,8 +246,18 @@ class AF:
         nextStates = [self.s]
         while nextStates:
             currentState = nextStates.pop()
-            for transition in [getTransition(currentState, symbol) for symbol in self.sigma]:
-                if transition in unreachableStates:
-                    unreachableStates.remove(transition)
-                    nextStates.append(transition)
-        reachableStates = self.K.copy().remove(unreachableStates)
+            for s in [s for s in sublist for sublist in getTransition(currentState, symbol) for symbol in self.sigma]:
+                if s in unreachableStates:
+                    unreachableStates.remove(s)
+                    nextStates.append(s)
+
+        # Elimina estados mortos
+        aliveStates = self.F.copy()
+        nextStates = aliveStates.copy()
+        while nextStates:
+            currentState = nextStates.pop()
+            for s in [s for s in sublist for sublist in getReverseTransition(currentState, symbol) for symbol in self.sigma]:
+                if s not in aliveStates:
+                    aliveStates.append(s)
+                    nextStates.append(s)
+        aliveAndReachableStates = aliveStates.remove(unreachableStates)
