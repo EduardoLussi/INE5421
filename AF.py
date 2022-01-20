@@ -7,12 +7,14 @@ class AF:
             - s é o estado inicial
             - F é o conjunto de estados finais
     '''
-    def __init__(self, K=[], sigma=[], delta=[], s=None, F=[]):
+    def __init__(self, K=[], sigma=[], delta=[], s=None, F=[], name=''):
         self.K = K
         self.sigma = sigma
         self.delta = delta
         self.s = s
         self.F = F
+
+        self.name = name
 
     '''
         Retorna transição de "state" por "symbol"

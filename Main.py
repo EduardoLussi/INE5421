@@ -1,59 +1,132 @@
 from AF import AF
 
-# Miniteste 3 sem epsilon
-# K = ['p', 'q', 'r', 's']
-# sigma = ['0', '1']
-# delta = [('p', '0', 'p'), ('p', '0', 'q'), ('p', '1', 'p'),
-#          ('q', '0', 'r'), ('q', '1', 'r'),
-#          ('r', '0', 's'),
-#          ('s', '0', 's'), ('s', '1', 's')]
-# s = 'p'
-# F = ['s']
+AFs = []    # Lista de autômatos
 
-# automata = AF(K, sigma, delta, s, F)
-# automata.plot()
-# automata = automata.getAFD()
-# automata.plot()
+while True: # Loop principal do programa
+    print(f"\n------------ MENU PRINCIPAL ------------\n")
 
-# Miniteste 3 com epsilon
-K = ['p', 'q', 'r']
-sigma = ['&', 'a', 'b', 'c']
-delta = [('p', 'a', 'p'), ('p', 'b', 'q'), ('p', 'c', 'r'),
-         ('q', '&', 'p'), ('q', 'a', 'q'), ('q', 'b', 'r'),
-         ('r', '&', 'q'), ('r', 'a', 'r'), ('r', 'c', 'p')]
-s = 'p'
-F = ['r']
+    print("1-  Inserir autômato")
+    print("2-  Visualizar autômato")
+    print("3-  Salvar autômato")
+    print("4-  Remover autômato")
+    print("5-  Determinizar autômato")
+    print("6-  Reconhecer sentença")
+    print("7-  Minimizar autômato")
+    print("8-  Unir autômatos")
+    print("9-  Interseccionar autômatos")
+    print("10- Sair")
 
-automata = AF(K, sigma, delta, s, F)
-automata.plot()
-automata = automata.getAFD()
-automata.plot()
+    op = int(input("\nEscolha uma opção: "))
 
-#Exemplo Vídeo aula
-# K = ['q0', 'q1', 'q2']
-# sigma = ['&', '0', '1', '2']
-# delta = [('q0', '0', 'q0'), ('q0', '&', 'q1'), 
-#          ('q1', '1', 'q1'), ('q1', '&', 'q2'), 
-#          ('q2', '2', 'q2')]
-# s = 'q0'
-# F = ['q0']
+    if op == 1:
+        print(f"\n--------- INSERÇÃO DE AUTÔMATO ---------\n")
 
-# automata = AF(K, sigma, delta, s, F)
-# automata.plot()
+        name = input("Nome do novo autômato: ")
+        file = input("Nome do arquivo: ")
 
-# automata = automata.getAFD()
-# automata.plot()
-# print(automata.s, automata.K)
+        af = AF(name=name)
 
-#print(automata.compute("bc"))
+        try:
+            af.readData(f"AFs/{file}")
+        except:
+            print("\n\033[1;31mArquivo inválido\033[0;0m")
+            continue
 
-# automata = automata.getAFD()
-# automata.plot()
+        AFs.append(af)
 
-#print(automata.compute("bc"))
+        print(f"\n\033[1;32mAutômato {af.name} inserido!\033[0;0m")
 
-# Exemplo leitura e compute
-# automata = AF()
-# automata.readData("test.txt")
-# automata.plot()
-# print(automata.compute("0001101"))
+    elif op == 2:
+        print(f"\n------- VISUALIZAÇÃO DE AUTÔMATO -------\n")
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        
+        try:
+            afId = int(input("\nEscolha o autômato: ")) - 1
+            assert(afId in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+        
+        print(f"\nDiagrama de transição de {AFs[afId].name}:\n")
+        AFs[afId].plot()
+
+        input("Pressione enter para continuar...")
+
+    elif op == 3:
+        ...
+
+    elif op == 4:
+        print(f"\n--------- REMOÇÃO DE AUTÔMATO ---------\n")
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+
+        try:        
+            afId = int(input("\nEscolha o autômato (0 para cancelar): ")) - 1
+            assert(afId in range(-1, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+        
+        if afId < 0:
+            continue
+
+        afName = AFs[afId].name
+
+        del AFs[afId]
+
+        print(f"\n\033[1;32mAutômato {afName} removido!\033[0;0m")
+
+    elif op == 5:
+        print(f"\n----- DETERMINIZAÇÃO DE AUTÔMATO -----\n")
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        
+        try:
+            afId = int(input("\nEscolha o autômato: ")) - 1
+            assert(afId in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+    
+        afd = AFs[afId].getAFD()
+
+        print(f"Autômato {AFs[afId].name} determinizado:\n")
+        afd.plot()
+
+        save = input("\nSalvar resultado (s/n)? ").strip()
+
+        if save == 'S':
+            afd.name = input("\nNome do novo autômato: ")
+            AFs.append(afd)
+
+            print(f"\n\033[1;32mAutômato {afd.name} inserido!\033[0;0m")
+            
+    elif op == 6:
+        print(f"\n----- RECONHECIMENTO DE SENTENÇA -----\n")
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        
+        try:
+            afId = int(input("\nEscolha o autômato: ")) - 1
+            assert(afId in range(0, len(AFs)))
+            af = AFs[afId]
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+    
+        sentence = input("\nSentença: ")
+
+        if af.compute(sentence):
+            print(f"\n\033[1;32mAutômato {af.name} reconhece {sentence}!\033[0;0m")
+        else:
+            print(f"\n\033[1;31mAutômato {af.name} não reconhece {sentence}!\033[0;0m")
+
+    elif op == 7:
+        ...
+    elif op == 8:
+        ...
+    elif op == 9:
+        ...
+    else:
+        break
