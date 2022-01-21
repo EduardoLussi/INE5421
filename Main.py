@@ -14,7 +14,8 @@ while True: # Loop principal do programa
     print("7-  Minimizar autômato")
     print("8-  Unir autômatos")
     print("9-  Interseccionar autômatos")
-    print("10- Sair")
+    print("10- Converter ER para AFD")
+    print("11- Sair")
 
     op = int(input("\nEscolha uma opção: "))
 
@@ -48,7 +49,7 @@ while True: # Loop principal do programa
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
         
-        print(f"\nDiagrama de transição de {AFs[afId].name}:\n")
+        print(f"\nTabela de transição de {AFs[afId].name}:\n")
         AFs[afId].plot()
 
         input("Pressione enter para continuar...")
@@ -128,5 +129,22 @@ while True: # Loop principal do programa
         ...
     elif op == 9:
         ...
+    elif op == 10:
+        print(f"\n-------- CONVERSÃO ER -> AFD --------\n")
+
+        regex = input("Digite a expressão regular: ").strip()
+
+        af = AF()
+        af.readRegex(regex)
+
+        print("\nConversão para autômato finito: ")
+        af.plot()
+
+        save = input("Deseja salvar o autômato (s/n)? ").strip()
+
+        if save == 's':
+            af.name = input("Digite o nome do novo autômato: ").strip()
+            AFs.append(af)
+
     else:
         break
