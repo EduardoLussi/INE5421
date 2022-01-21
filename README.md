@@ -22,7 +22,9 @@ Os autômatos são inseridos em arquivos de texto localizados na pasta "AFs", el
 Expressões regulares são denotadas da seguinte forma:
 
 "|": ou
+ 
 ".": contatenação
+ 
 "*": fecho
 
 Ex: (a|b)*.a.b.b
