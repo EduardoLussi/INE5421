@@ -1,3 +1,6 @@
+from re import S
+from Tree import Node
+
 class AF:
     '''
         Um autômato finito é uma quíntupla (K, sigma, delta, s, F) onde:
@@ -7,12 +10,14 @@ class AF:
             - s é o estado inicial
             - F é o conjunto de estados finais
     '''
-    def __init__(self, K=[], sigma=[], delta=[], s=None, F=[]):
+    def __init__(self, K=[], sigma=[], delta=[], s=None, F=[], name=''):
         self.K = K
         self.sigma = sigma
         self.delta = delta
         self.s = s
         self.F = F
+
+        self.name = name
 
     '''
         Retorna transição de "state" por "symbol"
@@ -128,6 +133,19 @@ class AF:
         A partir de "self", retorna um AFD equivalente
     '''
     def getAFD(self):
+        # Verifica se autômato já é determinístico
+        '''if '&' not in self.sigma:
+            breakFor = False
+            for state in self.K:
+                for s in self.sigma:
+                    if len(self.getTransition(s, state)) > 1:
+                        breakFor = True
+                        break
+                    if s == self.sigma[-1]:
+                        return False
+                if breakFor:
+                    break'''
+
         K = [[self.s]]
         sigma = self.sigma.copy()
 
@@ -261,3 +279,65 @@ class AF:
                     aliveStates.append(s)
                     nextStates.append(s)
         aliveAndReachableStates = aliveStates.remove(unreachableStates)
+
+    '''
+        Cria autômato a partir de expressão regular
+    '''
+    def readRegex(self, regex):
+        regex = f"({regex}).#"
+        tree = Node.getTree(regex)   # Obtém árvore sintática
+        tree.calculateFollowpos()   # Calcula followpos dos nós
+
+        # Inicializa Dstates contendo somente o estado desmarcado firstpos(root)
+        Dstates = [tree.getFirstpos()]
+        S = [tree.getFirstpos()]
+        Dtran = []
+        allSymbols = set()
+        unmarked = [tree.getFirstpos()]
+        while len(unmarked) != 0:   # Enquanto houver um símbolo desmarcado S em Dstates
+            S = unmarked.pop(0) # Marque S
+
+            # Cria lista de símbolos
+            symbols = set()
+            for a in S:
+                symbols = symbols.union(set([a.name]))
+            
+            allSymbols = allSymbols.union(symbols)
+
+            for a in symbols:   # Para cada símbolo de entrada a
+                U = set()   # Seja U,
+                for p in S: # para cada p em S
+                    if p.name == a: # que corresponde a a,
+                        U = U.union(p.followpos)    # a união de followpos(p)
+                if U not in Dstates: # Se U não está em Dstates
+                    Dstates.append(U)   # Adicione U como estado desmarcado de Dstates
+                    unmarked.append(U)
+                if (S, a, U) not in Dtran:  # Insere transição
+                    Dtran.append((S, a, U))
+
+        for transition in Dtran:    # Remove estado morto de #
+            state, symbol, next = transition
+            if symbol == '#':
+                Dstates.remove(next)
+                break
+
+        # Criar autômato com estados renomeados
+        self.K = [f"q{i}" for i in range(len(Dstates))]
+        self.S = self.K[0]
+        self.delta = []
+        self.F = []
+        
+        for transition in Dtran:
+            state, symbol, next = transition
+            
+            strState = self.K[Dstates.index(state)]
+            if symbol == '#':
+                if strState not in self.F:
+                    self.F.append(strState)
+            else:
+                newTransition = (strState, symbol, self.K[Dstates.index(next)])
+                self.delta.append(newTransition)
+        self.sigma = list(allSymbols)
+        self.sigma.remove('#')
+
+        self = self.getAFD()

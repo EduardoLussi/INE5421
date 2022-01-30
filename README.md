@@ -11,3 +11,20 @@ UFSC - INE (Departamento de Informática e Estatística) - <data>
 ## Detalhes de Implementação
 
 Implementado em Python 3.
+
+## Entrada de dados
+
+### Autômatos
+Os autômatos são inseridos em arquivos de texto localizados na pasta "AFs", eles seguem o padrão adotado pelo simulador do site <https://ivanzuzak.info/noam/webapps/fsm_simulator/>.
+
+### Expressões regulares
+
+Expressões regulares são denotadas da seguinte forma:
+
+"|": ou
+ 
+".": contatenação
+ 
+"*": fecho
+
+Ex: (a|b)*.a.b.b
