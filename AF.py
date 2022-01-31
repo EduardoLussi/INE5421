@@ -123,19 +123,6 @@ class AF:
         A partir de "self", retorna um AFD equivalente
     '''
     def getAFD(self):
-        # Verifica se autômato já é determinístico
-        '''if '&' not in self.sigma:
-            breakFor = False
-            for state in self.K:
-                for s in self.sigma:
-                    if len(self.getTransition(s, state)) > 1:
-                        breakFor = True
-                        break
-                    if s == self.sigma[-1]:
-                        return False
-                if breakFor:
-                    break'''
-
         K = [[self.s]]
         sigma = self.sigma.copy()
 

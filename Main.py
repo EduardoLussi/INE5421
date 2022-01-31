@@ -5,9 +5,9 @@ AFs = []    # Lista de autômatos
 while True: # Loop principal do programa
     print(f"\n------------ MENU PRINCIPAL ------------\n")
 
-    print("1-  Inserir autômato")
+    print("1-  Importar autômato")
     print("2-  Visualizar autômato")
-    print("3-  Salvar autômato")
+    print("3-  Exportar autômato")
     print("4-  Remover autômato")
     print("5-  Determinizar autômato")
     print("6-  Reconhecer sentença")
@@ -20,7 +20,7 @@ while True: # Loop principal do programa
     op = int(input("\nEscolha uma opção: "))
 
     if op == 1:
-        print(f"\n--------- INSERÇÃO DE AUTÔMATO ---------\n")
+        print(f"\n----------- IMPORTAR AUTÔMATO ----------\n")
 
         name = input("Nome do novo autômato: ")
         file = input("Nome do arquivo: ")
@@ -35,7 +35,7 @@ while True: # Loop principal do programa
 
         AFs.append(af)
 
-        print(f"\n\033[1;32mAutômato {af.name} inserido!\033[0;0m")
+        print(f"\n\033[1;32mAutômato {af.name} importado!\033[0;0m")
 
     elif op == 2:
         print(f"\n------- VISUALIZAÇÃO DE AUTÔMATO -------\n")
@@ -97,7 +97,7 @@ while True: # Loop principal do programa
 
         save = input("\nSalvar resultado (s/n)? ").strip()
 
-        if save == 'S':
+        if save == 's':
             afd.name = input("\nNome do novo autômato: ")
             AFs.append(afd)
 
