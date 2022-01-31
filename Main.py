@@ -28,7 +28,7 @@ while True: # Loop principal do programa
         af = AF(name=name)
 
         try:
-            af.readData(f"AFs/{file}")
+            af.readData(f"testes/{file}")
         except:
             print("\n\033[1;31mArquivo inválido\033[0;0m")
             continue
