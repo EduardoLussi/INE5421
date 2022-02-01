@@ -55,8 +55,21 @@ while True: # Loop principal do programa
         input("Pressione enter para continuar...")
 
     elif op == 3:
-        ...
-
+        print(f"\n------- EXPORTAR AUTÔMATO -------\n")
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        
+        try:
+            afId = int(input("\nEscolha o autômato: ")) - 1
+            assert(afId in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+        nameAF = AFs[afId].name
+        AFs[afId].exportAF(f"testes/{nameAF}.txt")
+        
+        print(f"\n\033[1;32mAutômato {nameAF} exportado!\033[0;0m")
+        
     elif op == 4:
         print(f"\n--------- REMOÇÃO DE AUTÔMATO ---------\n")
         for i, af in enumerate(AFs):

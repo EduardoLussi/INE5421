@@ -293,3 +293,25 @@ class AF:
         self.sigma.remove('#')
 
         self = self.getAFD()
+
+    '''
+        Exporta o Autômato para um arquivo
+    '''
+    def exportAF(self, file_name):
+        file = open(file_name, "w")
+        file.write("#states\n")
+        for state in self.K:
+            file.write(f"{state}\n")
+        file.write("#initial\n")
+        file.write(f"{self.s}\n")
+        file.write("#accepting\n")
+        for acept in self.F:
+            file.write(f"{acept}\n")
+        file.write("#alphabet\n")
+        for alph in self.sigma:
+            file.write(f"{alph}\n")
+        file.write("#transitions")
+        for delta in self.delta:
+            file.write("\n")
+            file.write(f"{delta[0]}:{delta[1]}>{delta[2]}")
+        file.close()
