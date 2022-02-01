@@ -1,8 +1,8 @@
 from AF import AF
 
-AFs = []    # Lista de autômatos
+AFs = []  # Lista de autômatos
 
-while True: # Loop principal do programa
+while True:  # Loop principal do programa
     print(f"\n------------ MENU PRINCIPAL ------------\n")
 
     print("1-  Importar autômato")
@@ -41,14 +41,14 @@ while True: # Loop principal do programa
         print(f"\n------- VISUALIZAÇÃO DE AUTÔMATO -------\n")
         for i, af in enumerate(AFs):
             print(f"{i+1}- {af.name}")
-        
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert afId in range(0, len(AFs))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         print(f"\nTabela de transição de {AFs[afId].name}:\n")
         AFs[afId].plot()
 
@@ -58,30 +58,30 @@ while True: # Loop principal do programa
         print(f"\n------- EXPORTAR AUTÔMATO -------\n")
         for i, af in enumerate(AFs):
             print(f"{i+1}- {af.name}")
-        
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert afId in range(0, len(AFs))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
         nameAF = AFs[afId].name
         AFs[afId].exportAF(f"testes/{nameAF}.txt")
-        
+
         print(f"\n\033[1;32mAutômato {nameAF} exportado!\033[0;0m")
-        
+
     elif op == 4:
         print(f"\n--------- REMOÇÃO DE AUTÔMATO ---------\n")
         for i, af in enumerate(AFs):
             print(f"{i+1}- {af.name}")
 
-        try:        
+        try:
             afId = int(input("\nEscolha o autômato (0 para cancelar): ")) - 1
-            assert(afId in range(-1, len(AFs)))
+            assert afId in range(-1, len(AFs))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         if afId < 0:
             continue
 
@@ -95,14 +95,14 @@ while True: # Loop principal do programa
         print(f"\n----- DETERMINIZAÇÃO DE AUTÔMATO -----\n")
         for i, af in enumerate(AFs):
             print(f"{i+1}- {af.name}")
-        
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert afId in range(0, len(AFs))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-    
+
         afd = AFs[afId].getAFD()
 
         print(f"Autômato {AFs[afId].name} determinizado:\n")
@@ -110,25 +110,25 @@ while True: # Loop principal do programa
 
         save = input("\nSalvar resultado (s/n)? ").strip()
 
-        if save == 's':
+        if save == "s":
             afd.name = input("\nNome do novo autômato: ")
             AFs.append(afd)
 
             print(f"\n\033[1;32mAutômato {afd.name} inserido!\033[0;0m")
-            
+
     elif op == 6:
         print(f"\n----- RECONHECIMENTO DE SENTENÇA -----\n")
         for i, af in enumerate(AFs):
             print(f"{i+1}- {af.name}")
-        
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert afId in range(0, len(AFs))
             af = AFs[afId]
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-    
+
         sentence = input("\nSentença: ")
 
         if af.compute(sentence):
@@ -155,7 +155,7 @@ while True: # Loop principal do programa
 
         save = input("Deseja salvar o autômato (s/n)? ").strip()
 
-        if save == 's':
+        if save == "s":
             af.name = input("Digite o nome do novo autômato: ").strip()
             AFs.append(af)
 
