@@ -1,4 +1,5 @@
 from AF import AF
+from afd_operations import union, intersection
 
 AFs = []    # Lista de autômatos
 
@@ -139,9 +140,90 @@ while True: # Loop principal do programa
     elif op == 7:
         ...
     elif op == 8:
-        ...
+        print(f"\n------- UNIÃO DE AUTÔMATOS FINITOS DETERMINÍSTICOS -------\n")
+        
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        try:
+            afId1 = int(input("\nEscolha primeiro o autômato: ")) - 1
+            assert(afId1 in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+        
+        for i, af in enumerate(AFs):
+            if i == afId1: continue
+            print(f"{i+1}- {af.name}")
+        try:
+            afId2 = int(input("\nEscolha segundo o autômato: ")) - 1
+            assert(afId1 in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        print("\nVocê escolheu os seguintes AFDs:\n")
+        print(f"\n{AFs[afId1].name}:\n")
+        AFs[afId1].plot()
+        print(f"\n{AFs[afId2].name}:\n")
+        AFs[afId2].plot()
+
+        print("União:")
+        af_union = union(AFs[afId1], AFs[afId2])
+        af_union.plot()
+
+        save = input("\nSalvar resultado (s/n)? ").strip()
+
+        if save == 's':
+            af_union.name = input("\nNome do novo autômato: ")
+            AFs.append(af_union)
+
+            print(f"\n\033[1;32mAutômato {af_union.name} inserido!\033[0;0m")
+            
+        input("Pressione enter para continuar...")
+
     elif op == 9:
-        ...
+        
+        print(f"\n------- INTERSEÇÃO DE AUTÔMATOS FINITOS DETERMINÍSTICOS -------\n")
+        
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        try:
+            afId1 = int(input("\nEscolha primeiro o autômato: ")) - 1
+            assert(afId1 in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+        
+        for i, af in enumerate(AFs):
+            if i == afId1: continue
+            print(f"{i+1}- {af.name}")
+        try:
+            afId2 = int(input("\nEscolha segundo o autômato: ")) - 1
+            assert(afId1 in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        print("\nVocê escolheu os seguintes AFDs:\n")
+        print(f"\n{AFs[afId1].name}:\n")
+        AFs[afId1].plot()
+        print(f"\n{AFs[afId2].name}:\n")
+        AFs[afId2].plot()
+
+        print("União:")
+        af_intersection = intersection(AFs[afId1], AFs[afId2])
+        af_intersection.plot()
+
+        save = input("\nSalvar resultado (s/n)? ").strip()
+
+        if save == 's':
+            af_intersection.name = input("\nNome do novo autômato: ")
+            AFs.append(af_intersection)
+
+            print(f"\n\033[1;32mAutômato {af_intersection.name} inserido!\033[0;0m")
+            
+        input("Pressione enter para continuar...")
+
     elif op == 10:
         print(f"\n-------- CONVERSÃO ER -> AFD --------\n")
 
