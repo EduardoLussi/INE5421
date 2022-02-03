@@ -280,6 +280,42 @@ class AF:
                     nextStates.append(s)
         aliveAndReachableStates = aliveStates.remove(unreachableStates)
 
+        # Constroe classes de equivalencia
+        eqClasses = [set(aliveAndReachableStates).difference(set(self.F)), set(self.F).intersection(set(aliveAndReachableStates))]
+        while True:
+            lenClassesBefore = len(eqClasses)
+            for eqClass in eqClasses:
+                for symbol in self.sigma:
+                    eqClassA = set()
+                    for state in eqClass:
+                        eqClassA.union(set(getReverseTransition(state, symbol))
+                    eqClassB = eqClass - eqClassA
+                    if (len(eqClassB) != 0):
+                        eqClasses.remove(eqClass)
+                        eqClasses.append(eqClassA)
+                        eqClasses.append(eqClassB)
+            if (lenClassesBefore - len(eqClasses) == 0):
+                break
+
+        newK = [str(eqClass) for eqClass in eqClasses]
+        newS = ""
+        for eqClass in eqClasses:
+            if self.s in eqClass:
+                newS = str(eqClass)
+                break
+        newF = [str(eqClassWithF) for f in set(self.F).intersection(set(aliveAndReachableStates)) for eqClassWithF in eqClass if f in eqClass]
+        newDelta = []
+        for eqClass in eqClasses:
+            for symbol in self.sigma:
+                target = getTransition(list(eqClass)[0], symbol)
+                for otherEqClass in eqClasses:
+                    if target in otherEqClass:
+                        transition = [str(eqClass), symbol, str(otherEqClass)]
+                        newDelta.append(transition)
+                        break
+
+        return AF(newK, self.sigma, newDelta, newS, newF)
+
     '''
         Cria autômato a partir de expressão regular
     '''
