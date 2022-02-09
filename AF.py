@@ -1,3 +1,4 @@
+import sys
 from re import S
 from Tree import Node
 
@@ -133,19 +134,6 @@ class AF:
         A partir de "self", retorna um AFD equivalente
     '''
     def getAFD(self):
-        # Verifica se autômato já é determinístico
-        '''if '&' not in self.sigma:
-            breakFor = False
-            for state in self.K:
-                for s in self.sigma:
-                    if len(self.getTransition(s, state)) > 1:
-                        breakFor = True
-                        break
-                    if s == self.sigma[-1]:
-                        return False
-                if breakFor:
-                    break'''
-
         K = [[self.s]]
         sigma = self.sigma.copy()
 
@@ -258,56 +246,88 @@ class AF:
     '''
         A partir de "self", retorna um AF minimizado equivalente
     '''
-    def AFM(self):
+    def minimize(self):
+        # Determiniza o autômato
+        # AFD = self.getAFD() # Algo na determinizacao faz o automato perder estados quando nao deveria
+        AFD = self
+        print("initial states: {0}".format(AFD.K))
+
         # Elimina estados inalcancaveis
-        unreachableStates = self.K.copy().remove(self.s)
-        nextStates = [self.s]
+        unreachableStates = AFD.K.copy()
+        unreachableStates.remove(AFD.s)
+        nextStates = [AFD.s]
         while nextStates:
             currentState = nextStates.pop()
-            for s in [s for s in sublist for sublist in getTransition(currentState, symbol) for symbol in self.sigma]:
+            for s in [s for symbol in AFD.sigma for sublist in AFD.getTransition(currentState, symbol) for s in sublist]:
                 if s in unreachableStates:
                     unreachableStates.remove(s)
                     nextStates.append(s)
+        reachableStates = list(set(AFD.K.copy()).difference(set(unreachableStates)))
+        print("reachableStates: {0}".format(reachableStates))
 
         # Elimina estados mortos
-        aliveStates = self.F.copy()
+        aliveStates = AFD.F.copy()
         nextStates = aliveStates.copy()
         while nextStates:
             currentState = nextStates.pop()
-            for s in [s for s in sublist for sublist in getReverseTransition(currentState, symbol) for symbol in self.sigma]:
+            for s in [s for symbol in AFD.sigma for sublist in AFD.getReverseTransition(currentState, symbol) for s in sublist]:
                 if s not in aliveStates:
                     aliveStates.append(s)
                     nextStates.append(s)
-        aliveAndReachableStates = aliveStates.remove(unreachableStates)
+        aliveAndReachableStates = list(set(aliveStates).intersection(set(reachableStates)))
+        print("aliveAndReachableStates: {0}".format(aliveAndReachableStates))
 
-        # Constroe classes de equivalencia
-        eqClasses = [set(aliveAndReachableStates).difference(set(self.F)), set(self.F).intersection(set(aliveAndReachableStates))]
+        # Constroi classes de equivalencia
+        '''
+        Definicao:
+        Um conjunto de estados pertencem a memsa classe de equivalencia se
+        para cada simbolo, a transicao de cada estado do conjunto pelo simbolo
+        resulta a elementos de uma mesma classe de equivalencia.
+
+        Algoritmo: ToExplain
+        ''' 
+        eqClasses = [set(aliveAndReachableStates).difference(set(AFD.F)),\
+                        set(AFD.F).intersection(set(aliveAndReachableStates))]
         while True:
-            lenClassesBefore = len(eqClasses)
-            for eqClass in eqClasses:
-                for symbol in self.sigma:
-                    eqClassA = set()
-                    for state in eqClass:
-                        eqClassA.union(set(getReverseTransition(state, symbol))
-                    eqClassB = eqClass - eqClassA
-                    if (len(eqClassB) != 0):
-                        eqClasses.remove(eqClass)
-                        eqClasses.append(eqClassA)
-                        eqClasses.append(eqClassB)
-            if (lenClassesBefore - len(eqClasses) == 0):
+            newEqClasses = []
+            subdivisions = [[[] for col in range(len(eqClasses))] for col in range(len(AFD.sigma))]
+            for idxsymb, symbol in enumerate(AFD.sigma):
+                for state in aliveAndReachableStates:
+                    target = AFD.getTransition(state, symbol)[0]
+                    for idxclss, eqClass in enumerate(eqClasses):
+                        if (target in eqClass):
+                            subdivisions[idxsymb][idxclss].append(state)
+                            break
+                    else:
+                        print("Minimization: something went wrong with equivalence class construction.", file=sys.stderr)
+            subdivisionsIterator = iter(subdivisions)
+            comulativeEqClasses = next(subdivisionsIterator)
+            for symbolGroup in subdivisionsIterator:
+                newComulativeEqClasses = [set(partialEqClassA).intersection(set(partialEqClassB)) \
+                                            for partialEqClassA in symbolGroup for partialEqClassB in comulativeEqClasses \
+                                            if set(partialEqClassA).intersection(set(partialEqClassB))]
+                comulativeEqClasses = newComulativeEqClasses
+                        
+            if (len(comulativeEqClasses) - len(eqClasses) == 0):
+                eqClasses = comulativeEqClasses
                 break
+            else:
+                eqClasses = comulativeEqClasses
 
+        print(eqClasses)
+        # Constroi Automato
         newK = [str(eqClass) for eqClass in eqClasses]
         newS = ""
         for eqClass in eqClasses:
             if self.s in eqClass:
                 newS = str(eqClass)
                 break
-        newF = [str(eqClassWithF) for f in set(self.F).intersection(set(aliveAndReachableStates)) for eqClassWithF in eqClass if f in eqClass]
+        newF = [str(eqClassWithF) for f in set(AFD.F).intersection(set(aliveAndReachableStates)) \
+                for eqClassWithF in eqClasses if f in eqClassWithF]
         newDelta = []
         for eqClass in eqClasses:
-            for symbol in self.sigma:
-                target = getTransition(list(eqClass)[0], symbol)
+            for symbol in AFD.sigma:
+                target = AFD.getTransition(list(eqClass)[0], symbol)[0]
                 for otherEqClass in eqClasses:
                     if target in otherEqClass:
                         transition = [str(eqClass), symbol, str(otherEqClass)]
@@ -377,3 +397,26 @@ class AF:
         self.sigma.remove('#')
 
         self = self.getAFD()
+
+
+    '''
+        Exporta o Autômato para um arquivo
+    '''
+    def exportAF(self, file_name):
+        file = open(file_name, "w")
+        file.write("#states\n")
+        for state in self.K:
+            file.write(f"{state}\n")
+        file.write("#initial\n")
+        file.write(f"{self.s}\n")
+        file.write("#accepting\n")
+        for acept in self.F:
+            file.write(f"{acept}\n")
+        file.write("#alphabet\n")
+        for alph in self.sigma:
+            file.write(f"{alph}\n")
+        file.write("#transitions")
+        for delta in self.delta:
+            file.write("\n")
+            file.write(f"{delta[0]}:{delta[1]}>{delta[2]}")
+        file.close()
