@@ -262,8 +262,10 @@ class AF:
     def minimize(self):
         # Determiniza o autômato
         AFD = self.getAFD()
-        
-        print("initial states: {0}".format(AFD.K))
+
+        AFD.plot()
+
+        print("initial states: ", AFD.K)
 
         # Elimina estados inalcancaveis
         unreachableStates = AFD.K.copy()
@@ -271,10 +273,11 @@ class AF:
         nextStates = [AFD.s]
         while nextStates:
             currentState = nextStates.pop()
-            for s in [s for symbol in AFD.sigma for sublist in AFD.getTransition(currentState, symbol) for s in sublist]:
-                if s in unreachableStates:
-                    unreachableStates.remove(s)
-                    nextStates.append(s)
+            for symbol in AFD.sigma:
+                for s in AFD.getTransition(currentState, symbol):
+                    if s in unreachableStates:
+                        unreachableStates.remove(s)
+                        nextStates.append(s)
         reachableStates = list(set(AFD.K.copy()).difference(set(unreachableStates)))
         print("reachableStates: {0}".format(reachableStates))
 
@@ -283,10 +286,11 @@ class AF:
         nextStates = aliveStates.copy()
         while nextStates:
             currentState = nextStates.pop()
-            for s in [s for symbol in AFD.sigma for sublist in AFD.getReverseTransition(currentState, symbol) for s in sublist]:
-                if s not in aliveStates:
-                    aliveStates.append(s)
-                    nextStates.append(s)
+            for symbol in AFD.sigma:
+                for s in AFD.getReverseTransition(currentState, symbol):
+                    if s not in aliveStates:
+                        aliveStates.append(s)
+                        nextStates.append(s)
         aliveAndReachableStates = list(set(aliveStates).intersection(set(reachableStates)))
         print("aliveAndReachableStates: {0}".format(aliveAndReachableStates))
 
@@ -357,8 +361,14 @@ class AF:
         for delta in newDelta:
             for i, k in enumerate(delta):
                 delta[i] = str(k).replace("'", "").replace('"', "")
-            
         newS = str(newS).replace("'", "").replace('"', "")
+
+        print()
+        print(newK)
+        print(self.sigma)
+        print(newDelta)
+        print(newS)
+        print(newF)
 
         return AF(newK, self.sigma, newDelta, newS, newF)
 
