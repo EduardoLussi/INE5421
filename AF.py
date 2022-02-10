@@ -134,6 +134,19 @@ class AF:
         A partir de "self", retorna um AFD equivalente
     '''
     def getAFD(self):
+        # Verifica se autômato já é determinístico
+        if '&' not in self.sigma:
+            breakFor = False
+            for state in self.K:
+                for s in self.sigma:
+                    if len(self.getTransition(state, s)) > 1:
+                        breakFor = True
+                        break
+                if breakFor:
+                    break
+        if breakFor is False:
+            return self
+
         K = [[self.s]]
         sigma = self.sigma.copy()
 
@@ -248,8 +261,8 @@ class AF:
     '''
     def minimize(self):
         # Determiniza o autômato
-        # AFD = self.getAFD() # Algo na determinizacao faz o automato perder estados quando nao deveria
-        AFD = self
+        AFD = self.getAFD()
+        
         print("initial states: {0}".format(AFD.K))
 
         # Elimina estados inalcancaveis
@@ -293,7 +306,10 @@ class AF:
             subdivisions = [[[] for col in range(len(eqClasses))] for col in range(len(AFD.sigma))]
             for idxsymb, symbol in enumerate(AFD.sigma):
                 for state in aliveAndReachableStates:
-                    target = AFD.getTransition(state, symbol)[0]
+                    target = AFD.getTransition(state, symbol)
+                    if len(target) == 0:
+                        continue
+                    target = target[0]
                     for idxclss, eqClass in enumerate(eqClasses):
                         if (target in eqClass):
                             subdivisions[idxsymb][idxclss].append(state)
@@ -333,6 +349,16 @@ class AF:
                         transition = [str(eqClass), symbol, str(otherEqClass)]
                         newDelta.append(transition)
                         break
+
+        # Formatação dos nomes dos estados
+        for n in [newK, newF]:
+            for i, k in enumerate(n):
+                n[i] = str(k).replace("'", "").replace('"', "")
+        for delta in newDelta:
+            for i, k in enumerate(delta):
+                delta[i] = str(k).replace("'", "").replace('"', "")
+            
+        newS = str(newS).replace("'", "").replace('"', "")
 
         return AF(newK, self.sigma, newDelta, newS, newF)
 

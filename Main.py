@@ -138,7 +138,29 @@ while True: # Loop principal do programa
             print(f"\n\033[1;31mAutômato {af.name} não reconhece {sentence}!\033[0;0m")
 
     elif op == 7:
-        ...
+        print(f"\n------- MINIMIZAÇÃO DE AUTÔMATO ------\n")
+        for i, af in enumerate(AFs):
+            print(f"{i+1}- {af.name}")
+        
+        try:
+            afId = int(input("\nEscolha o autômato: ")) - 1
+            assert(afId in range(0, len(AFs)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+    
+        afd = AFs[afId].minimize()
+
+        print(f"Autômato {AFs[afId].name} minimizado:\n")
+        afd.plot()
+
+        save = input("\nSalvar resultado (s/n)? ").strip()
+
+        if save == 's':
+            afd.name = input("\nNome do novo autômato: ")
+            AFs.append(afd)
+
+            print(f"\n\033[1;32mAutômato {afd.name} inserido!\033[0;0m")
     elif op == 8:
         print(f"\n------- UNIÃO DE AUTÔMATOS FINITOS DETERMINÍSTICOS -------\n")
         
