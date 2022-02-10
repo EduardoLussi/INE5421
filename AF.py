@@ -265,7 +265,7 @@ class AF:
 
         AFD.plot()
 
-        print("initial states: ", AFD.K)
+        print("states before minimization: ", AFD.K)
 
         # Elimina estados inalcancaveis
         unreachableStates = AFD.K.copy()
@@ -334,12 +334,12 @@ class AF:
             else:
                 eqClasses = comulativeEqClasses
 
-        print(eqClasses)
+        print("Eq Classes: {0}".format(eqClasses))
         # Constroi Automato
         newK = [str(eqClass) for eqClass in eqClasses]
         newS = ""
         for eqClass in eqClasses:
-            if self.s in eqClass:
+            if AFD.s in eqClass:
                 newS = str(eqClass)
                 break
         newF = [str(eqClassWithF) for f in set(AFD.F).intersection(set(aliveAndReachableStates)) \
@@ -362,13 +362,6 @@ class AF:
             for i, k in enumerate(delta):
                 delta[i] = str(k).replace("'", "").replace('"', "")
         newS = str(newS).replace("'", "").replace('"', "")
-
-        print()
-        print(newK)
-        print(self.sigma)
-        print(newDelta)
-        print(newS)
-        print(newF)
 
         return AF(newK, self.sigma, newDelta, newS, newF)
 
