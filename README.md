@@ -35,7 +35,8 @@ Tree é uma árvore sintática utilizada na conversão ER -> AFD.
 ## Entrada de dados
 
 ### Autômatos
-Os autômatos são inseridos em arquivos de texto localizados na pasta "AFs", eles seguem o padrão adotado pelo simulador do site <https://ivanzuzak.info/noam/webapps/fsm_simulator/>.
+Os autômatos são inseridos em arquivos de texto localizados na pasta "testes", eles seguem o padrão adotado pelo simulador do site <https://ivanzuzak.info/noam/webapps/fsm_simulator/>. Esse padrão é de fácil compreensão e já existem vários exemplos prontos
+ na pasta "testes".
 
 ### Expressões regulares
 
