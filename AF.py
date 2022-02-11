@@ -260,12 +260,13 @@ class AF:
         A partir de "self", retorna um AF minimizado equivalente
     '''
     def minimize(self):
+        print("Autômato original:")
+        self.plot()
+
         # Determiniza o autômato
         AFD = self.getAFD()
 
-        AFD.plot()
-
-        print("states before minimization: ", AFD.K)
+        #print("states before minimization: ", AFD.K)
 
         # Elimina estados inalcancaveis
         unreachableStates = AFD.K.copy()
@@ -279,7 +280,7 @@ class AF:
                         unreachableStates.remove(s)
                         nextStates.append(s)
         reachableStates = list(set(AFD.K.copy()).difference(set(unreachableStates)))
-        print("reachableStates: {0}".format(reachableStates))
+        #print("reachableStates: {0}".format(reachableStates))
 
         # Elimina estados mortos
         aliveStates = AFD.F.copy()
@@ -292,7 +293,7 @@ class AF:
                         aliveStates.append(s)
                         nextStates.append(s)
         aliveAndReachableStates = list(set(aliveStates).intersection(set(reachableStates)))
-        print("aliveAndReachableStates: {0}".format(aliveAndReachableStates))
+        #print("aliveAndReachableStates: {0}".format(aliveAndReachableStates))
 
         # Constroi classes de equivalencia
         '''
@@ -334,7 +335,7 @@ class AF:
             else:
                 eqClasses = comulativeEqClasses
 
-        print("Eq Classes: {0}".format(eqClasses))
+        #print("Eq Classes: {0}".format(eqClasses))
         # Constroi Automato
         newK = [str(eqClass) for eqClass in eqClasses]
         newS = ""
