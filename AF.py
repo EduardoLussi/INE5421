@@ -121,7 +121,9 @@ class AF:
 
         print(text)
 
-    # Retorna transições por epsilon a partir de "state"
+    '''
+        Retorna transições por epsilon a partir de "state"
+    '''
     def getEpsilonTransition(self, state):
         for k in state:
             epsilonTransition = self.getTransition(k, '&')
