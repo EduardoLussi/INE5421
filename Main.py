@@ -2,6 +2,7 @@ from AF import AF
 from afd_operations import union, intersection
 
 AFs = []    # Lista de autômatos
+Grammars = []   # Lista de gramáticas
 
 while True: # Loop principal do programa
     print(f"\n------------ MENU PRINCIPAL ------------\n")
@@ -16,9 +17,17 @@ while True: # Loop principal do programa
     print("8-  Unir autômatos")
     print("9-  Interseccionar autômatos")
     print("10- Converter ER para AFD")
-    print("11- Sair")
+    print("11- Importar gramática")
+    print("12- Visualizar gramática")
+    print("13- Exportar gramática")
+    print("14- Remover gramática")
+    print("15- Eliminação de recursão à esquerda")
+    print("16- Fatoração")
+    print("17- Reconhecer sentença via tabela preditivo LL(1)")
+    print("18- Reconhecer sentença via SLR(1)")
+    print("19- Sair")
 
-    op = int(input("\nEscolha uma opção: "))
+    op = int(input("\nDigite uma opção: "))
 
     if op == 1:
         print(f"\n----------- IMPORTAR AUTÔMATO ----------\n")
@@ -262,6 +271,40 @@ while True: # Loop principal do programa
         if save == 's':
             af.name = input("Digite o nome do novo autômato: ").strip()
             AFs.append(af)
+    elif op == 11:
+        ...
+    elif op == 12:
+        ...
+    elif op == 13:
+        ...
+    elif op == 14:
+        ...
+    elif op == 15:
+        ...
+    elif op == 16:
+        ...
+    elif op == 17:
+        ...
+    elif op == 18:
+        print(f"\n----- RECONHECIMENTO DE SENTENÇA COM SLR(1) -----\n")
+        for i, grammar in enumerate(Grammars):
+            print(f"{i+1}- {grammar.name}")
+        
+        try:
+            grammarId = int(input("\nEscolha a gramática: ")) - 1
+            assert(grammarId in range(0, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        grammar = Grammars[grammarId]
+
+        sentence = input("Digite a sentença com símbolos separados por espaço: ").strip()
+
+        if grammar.slrRecognizeSentence(sentence):
+            print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
+        else:
+            print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
 
     else:
         break

@@ -21,4 +21,4 @@ P = {
     }
 
 glc = GLC(N=['S', 'A', 'B'], T=['or', 'and', '(', ')', 'not', 'true', 'false'], S='S', P=P)
-glc.slrRecognizeSentence(['not', '(', 'true', 'or', 'false', 'and', 'true'])
+print(glc.slrRecognizeSentence("not ( false )"))

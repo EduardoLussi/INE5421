@@ -19,4 +19,4 @@ P = {
     }
 
 glc = GLC(N=['E', 'T', 'F'], T=['+', '*', '(', ')', 'id'], S='E', P=P)
-glc.slrRecognizeSentence(['id', '*', 'id', '+', 'id'])
+print(glc.slrRecognizeSentence("id * id"))

@@ -134,7 +134,7 @@ class GLC:
         if debug:
             print(f"FOLLOW={self._follow}")
 
-        return self._follow            
+        return self._follow
     
     '''
         Reconhece sentença via implementação de um SLR(1)
@@ -266,14 +266,104 @@ class GLC:
             print("\n Autômato LR(0):")
             af.plot()
 
+        # 2. Criar tabela SLR
+        debug = False
+
         extendedGrammar = GLC(self.N.copy(), self.T.copy(), f"{self.S}'", self.P.copy())
         extendedGrammar.N.append(extendedGrammar.S)
         extendedGrammar.P[extendedGrammar.S] = [[self.S]]
         
         extendedGrammar.setFollow()
 
-        
+        SLRTable = []
+        for i, Ii in enumerate(I):
+            SLRTable.append(dict())
+            
+            # Shifts
+            for terminal in self.T: 
+                terminalTransition = af.getTransition(f"I{i}", terminal)
+                if len(terminalTransition):
+                    SLRTable[i][terminal] = f"s{terminalTransition[0][1:]}"
+            
+            # Desvios
+            for nonTerminal in self.N:
+                nonTerminalTransition = af.getTransition(f"I{i}", nonTerminal)
+                if len(nonTerminalTransition):
+                    SLRTable[i][nonTerminal] = f"{nonTerminalTransition[0][1:]}"
+                
+            # Reduces
+            for item, productions in Ii.items():
+                if item == f"{self.S}'":    # Aceitação acc
+                    if productions == [[self.S, "."]]:
+                        SLRTable[i]["$"] = "acc"
+                else:
+                    for production in productions:
+                        if production[-1] == '.':
+                            productionWithoutPoint = production.copy()
+                            productionWithoutPoint.remove('.')
+                            for follow in extendedGrammar._follow[item]:
+                                productionIndex = self.P[item].index(productionWithoutPoint)
+                                SLRTable[i][follow] = f"r {item} {productionIndex}"
 
+        if debug:
+            print("Tabela SLR:")
+            for i, line in enumerate(SLRTable):
+                print(f"{i}: {line}")
+            
+        # 3. Reconhecimento da sentença
+        debug = False
+
+        sentence = sentence.split()
+
+        sentence.append("$")
+
+        def recognize(sentence):
+            stack = [0]
+            i = 0
+            while True:
+                symbol = sentence[i]
+
+                action = SLRTable[stack[-1]][symbol]
+                
+                if debug:
+                    print(sentence[i:], stack, action)
+                
+                if action == "acc":
+                    return True
+
+                if action[0] == "s":
+                    stack.append(int(action[1:]))
+                    i += 1
+                elif action[0] == "r":  # Também verifica se redução corresponde
+                    _, reduced, productionIndex = action.split()
+                    production = self.P[reduced][int(productionIndex)]
+                    for productionSymbol in production[::-1]:
+                        # Procura produção que termina com .
+                        foundSymbol = False
+                        for _, stackISymbolProductions in I[stack[-1]].items():
+                            for stackISymbolProduction in stackISymbolProductions:
+                                if stackISymbolProduction[-1] == ".":
+                                    # Valor antes do ponto precisa ser igual ao indicado por r
+                                    if stackISymbolProduction[-2] != productionSymbol:
+                                        if debug:
+                                            print(f"Sentença não reconhecida. Falha em r {reduced} {productionIndex}")
+                                        return False
+                                    foundSymbol = True
+                                    break
+                            if foundSymbol:
+                                break                    
+                            
+                        stack.pop()
+                    
+                    stack.append(int(SLRTable[stack[-1]][reduced]))
+        
+        try:
+            return recognize(sentence)
+        except Exception as err:
+            if debug:
+                print(f"Sentença não reconhecida. {err}")
+            return False
+                    
     '''
         Retorna uma gramática equivalente, sem símbolos improdutívos
     '''
