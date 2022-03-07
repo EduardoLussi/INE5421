@@ -1,5 +1,12 @@
+import enum
 import sys
+
+from numpy import product
+
+from collections import Counter
+
 import auxfuncs
+from AF import AF
 
 class GLC:
     '''
@@ -20,6 +27,252 @@ class GLC:
         self.P = P
         
         self.name = name
+
+        self._first = dict()
+        self._follow = dict()
+
+    '''
+        Calcula o conjunto first da gramática
+    '''
+    def setFirst(self):
+        debug = False
+
+        for terminal in self.T: # FIRST de um terminal é o próprio terminal
+            self._first[terminal] = set([terminal])
+
+        for nonTerminal in self.N:  # Definição dos first de cada não-terminal
+            self._first[nonTerminal] = set()
+
+        # 1. Se X ::= aY, a pertence à FIRST(X)
+        for nonTerminal in self.N:
+            for nonTerminalProduction in self.P[nonTerminal]:
+                if nonTerminalProduction[0] in self.T:
+                    if debug:
+                        print(f"{nonTerminalProduction[0]} pertence à FIRST({nonTerminal})={self._first[nonTerminal]}")
+                    self._first[nonTerminal].add(nonTerminalProduction[0])
+
+        # 2. Se X ::= Y1 Y2...Yk, então FIRST(Y1) pertence à FIRST(X)
+        finished = False
+        while not finished:
+            finished = True
+            for nonTerminal in self.N:
+                for nonTerminalProduction in self.P[nonTerminal]:
+                    for symbol in nonTerminalProduction:
+                        if symbol in self.N:
+                            firstSymbol = self._first[symbol].copy()
+                            if '&' in firstSymbol:
+                                firstSymbol.remove('&')
+                            if not firstSymbol.issubset(self._first[nonTerminal]):
+                                if debug:
+                                    print(f"FIRST({symbol})={self._first[symbol]} está contido em FIRST({nonTerminal})={self._first[nonTerminal]}")
+                                self._first[nonTerminal] = self._first[nonTerminal].union(firstSymbol)
+                                finished = False
+                            
+                            if "&" not in self._first[symbol]:
+                                break
+                        else:
+                            self._first[nonTerminal].add(symbol)
+                            break
+        
+        if debug:
+            print(self._first)
+
+        return self._first
+
+    '''
+        Calcula o conjunto follow dos não-terminais da gramática
+    '''
+    def setFollow(self):
+        self.setFirst()
+
+        debug = False
+
+        if debug:
+            print(f"FIRST={self._first}")
+
+        for nonTerminal in self.N:  # Definição dos follows de cada não-terminal
+            self._follow[nonTerminal] = set()
+            if nonTerminal == self.S:
+                self._follow[nonTerminal].add("$")
+
+        finished = False
+        while not finished: # Enquanto houver alteração nos FOLLOWS
+            finished = True
+            for nonTerminal in self.N:  # Para cada não-terminal nonTerminal
+                for nonTerminalProduction in self.P[nonTerminal]:   # Para cada produção nonTerminalProduction de nonTerminal
+                    # 1. Se A ::= alfa B beta e beta != &, então adicione FIRST(beta) em FOLLOW(B)
+                    for i, symbol in enumerate(nonTerminalProduction[:-1]): # Para cada símbolo symbol da produção nonTerminalProduction
+                        if symbol in self.N:    # Somente não-terminais possuem FOLLOW
+                            for j in range(i+1, len(nonTerminalProduction)):    # Verifica símbolos seguintes
+                                firstNonTerminalProductionJ = self._first[nonTerminalProduction[j]].copy()
+                                if '&' in firstNonTerminalProductionJ:
+                                    firstNonTerminalProductionJ.remove('&')
+                                if not firstNonTerminalProductionJ.issubset(self._follow[symbol]):
+                                    if debug:
+                                        print(f"FIRST({nonTerminalProduction[j]})={self._first[nonTerminalProduction[j]]} está contido em FOLLOW({symbol})={self._follow[symbol]}")
+                                    self._follow[symbol] = self._follow[symbol].union(firstNonTerminalProductionJ)
+                                    finished = False                        
+                                # Se & pertence ao FIRST do símbolo atual nonTerminalProduction[j], continua, senão, para
+                                if "&" not in self._first[nonTerminalProduction[j]]:
+                                    break
+                    # 2. Se A ::= alfa B (ou A ::= alfa B beta, onde & pertence à FIRST(beta)),
+                    # então adicione FOLLOW(A) em FOLLOW(B)
+                    for i, symbol in enumerate(nonTerminalProduction[::-1]):    # Varre produção ao contrário
+                        if symbol not in self.N:    # Se o símbolo for terminal, para
+                            break
+                        
+                        if not self._follow[nonTerminal].issubset(self._follow[symbol]):
+                            if debug:
+                                print(f"FOLLOW({nonTerminal})={self._follow[nonTerminal]} está contido em FOLLOW({symbol})={self._follow[symbol]}")
+                            self._follow[symbol] = self._follow[symbol].union(self._follow[nonTerminal])
+                            finished = False                        
+
+                        # Se & pertence ao FIRST do símbolo atual nonTerminalProduction[j], continua, senão, para
+                        if "&" not in self._first[nonTerminalProduction[i]]:
+                            break
+
+        if debug:
+            print(f"FOLLOW={self._follow}")
+
+        return self._follow            
+    
+    '''
+        Reconhece sentença via implementação de um SLR(1)
+    '''
+    def slrRecognizeSentence(self, sentence):
+        '''
+            Retorna o closure (fechamento) de um conjunto de itens
+        '''
+        def setClosure(Item):
+            debug = False
+            if debug:
+                print("Calculating Closure...")
+            i = 0
+            while i < len(Item):                                    # Para cada não-terminal nonTerminal
+                nonTerminal, productions = list(Item.items())[i]
+                for production in productions:                      # Para cada produção production de nonTerminal
+                    if debug:
+                        print(f"Looking at {nonTerminal} -> {production}")
+                    pointIndex = production.index(".")              # Obtém índice de .
+
+                    # Se o símbolo depois do ponto for um não-terminal
+                    if pointIndex < len(production) - 1:        
+                        symbolAfterPoint = production[pointIndex+1]
+                        if symbolAfterPoint in self.N:
+
+                            # Adiciona todas as produções desse símbolo no Item com . no início
+                            if symbolAfterPoint not in Item:
+                                Item[symbolAfterPoint] = []
+                            for symbolAfterPointProduction in self.P[symbolAfterPoint]:
+                                newProduction = symbolAfterPointProduction.copy()
+                                newProduction.insert(0, ".")
+                                if newProduction not in Item[symbolAfterPoint]:
+                                    Item[symbolAfterPoint].append(newProduction)
+                                    if debug:
+                                        print(f"New Production: {symbolAfterPoint} -> {newProduction}")
+                i += 1
+
+            return Item
+
+        '''
+            Retorna autômato finito que representa função goto
+        '''
+        def getGoto(Item):
+            debug = False
+            
+            if debug:
+                print("Calculating goto...")
+
+            transitions = dict()
+            for nonTerminal, productions in Item.items():   # Para cada não-terminal nonTerminal
+                for production in productions:              # Para cada produção production de nonTerminal
+                    if debug:
+                        print(f"Looking at {nonTerminal} -> {production}")
+                    pointIndex = production.index(".")      # Obtém índice de .
+                    if pointIndex < len(production) - 1:    # Se . não é o último símbolo da produção
+                        # Cria nova produção passando o ponto para frente, por exemplo: S' ::= .S -> S' ::= S.
+                        newProduction = production.copy()
+                        newProduction.remove('.')
+                        newProduction.insert(pointIndex+1, '.')
+
+                        # Adiciona transição por símbolo depois do ponto
+                        if newProduction[pointIndex] not in transitions.keys():
+                            transitions[newProduction[pointIndex]] = dict()
+
+                        if nonTerminal in transitions[newProduction[pointIndex]]:
+                            if newProduction not in transitions[newProduction[pointIndex]][nonTerminal]:
+                                transitions[newProduction[pointIndex]][nonTerminal].append(newProduction)
+                        else:
+                            transitions[newProduction[pointIndex]][nonTerminal] = [newProduction]
+                        if debug:
+                            print(f"New production for transition by {newProduction[pointIndex]}: {newProduction}")
+            
+            return transitions
+
+        # 1. Criar autômato
+        debug = False
+
+        sigma = self.N.copy()
+        sigma.extend(self.T.copy())
+        sigma.append('$')
+        af = AF(sigma=sigma)
+
+        I = [{f"{self.S}'": [['.', self.S]]}] # Cria conjunto de itens I com I0 contendo somente S' ::= .S
+        af.s = "I0"                           # Estado inicial é I0
+        af.K.append("acc")
+        af.F = ['acc']
+        setClosure(I[0])
+        for i, Ii in enumerate(I):
+            af.K.append(f"I{i}")    # Insere estado Ii
+
+            if debug:
+                print(f"I{i}: {Ii}")
+    
+            goto = getGoto(Ii)      # Calcula Goto(Ii)
+            if f"{self.S}'" in Ii and [self.S, "."] in Ii[f"{self.S}'"]:    # Estado final
+                af.delta.append((f"I{i}", "$", "acc"))
+            #print(f"GOTO(I{i}): {goto}")
+
+            # Cria novos itens I
+            for symbol, newI in goto.items():   # Para cada novo I newI encontrado a partir de Ii
+                setClosure(newI)                # Calcula Closure(newI)
+                for j, Ij in enumerate(I):      # Verifica se newI já não existe em I
+                    if len(Ij) == len(newI):    # Se o tamanho do Ij é igual ao novo I newI
+                        for IjSymbol, IjSymbolProductions in Ij.items():    # Para cada símbolo IjSymbol em Ij
+                            differentProductions = False
+                            if IjSymbol in newI.keys():     # Se o símbolo está em newI
+                                # Se a quantidade de produções de IjSymbol for igual em Ij e newI
+                                if len(IjSymbolProductions) == len(newI[IjSymbol]):
+                                    # Verifica se produções de IjSymbol são iguais as de newI por IjSymbol
+                                    for IjSymbolProcutionsElement in IjSymbolProductions:   
+                                        if not IjSymbolProcutionsElement in newI[IjSymbol]: # Encontrada produção diferente
+                                            differentProductions = True
+                                            break
+                                else:
+                                    break
+                            else:   # Se o símbolo não está em newI, newI != Ij
+                                break
+                            if differentProductions:
+                                break                            
+                        else:   # Ij é equivalente a newI
+                            af.delta.append((f"I{i}", symbol, f"I{j}"))
+                            #print(f"Found equivalent I{j}: {I[j]}")
+                            break
+                else:
+                    af.delta.append((f"I{i}", symbol, f"I{len(I)}"))
+                    I.append(newI)
+
+        if debug:
+            print("\n Autômato LR(0):")
+            af.plot()
+
+        extendedGrammar = GLC(self.N.copy(), self.T.copy(), f"{self.S}'", self.P.copy())
+        extendedGrammar.N.append(extendedGrammar.S)
+        extendedGrammar.P[extendedGrammar.S] = [[self.S]]
+        
+        extendedGrammar.setFollow()
+
+        
 
     '''
         Retorna uma gramática equivalente, sem símbolos improdutívos
