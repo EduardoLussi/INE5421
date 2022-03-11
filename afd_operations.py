@@ -49,7 +49,7 @@ def cartesian_product(af1: AF, af2: AF, fully_explicit: bool = True) -> AF:
                     t1 = af1.getTransition(q1, symbol)
                     t2 = af2.getTransition(q2, symbol)
                 # se len > 1, o autômato não é determinístico; se
-                assert(len(t1) <= 1 and len(t2) <= 1)
+                assert (len(t1) <= 1 and len(t2) <= 1)
             except AssertionError:
                 print("Ao menos um FA de entrada não era determinístico.")
                 print("Use algoritmo de determinização antes de continuar :)")
@@ -67,7 +67,9 @@ def cartesian_product(af1: AF, af2: AF, fully_explicit: bool = True) -> AF:
 
 def format_product(af: AF):
     """Formatador para tuplas usadas no produto cartesiano"""
+
     def merge_tuples(x): return '{' + f'{x[0]},{x[1]}' + '}'
+
     af.K = list(map(merge_tuples, af.K))
     af.F = list(map(merge_tuples, af.F))
     af.s = merge_tuples(af.s)
@@ -85,6 +87,7 @@ def union(af1: AF, af2: AF) -> AF:
     # Remover estados inalcançáveis -> usar o `minimize` aqui
     format_product(af_prod)
     return af_prod
+
 
 def intersection(af1: AF, af2: AF) -> AF:
     """Utiliza o produto cartesiano para gerar a interseção de dois AFDs"""
