@@ -46,7 +46,6 @@ class GLC:
                     break
                 non_terminals.append(line)
             # terminals
-            line = f.readline()
             terminals = []
             while True:
                 line = f.readline().rstrip('\n')
@@ -92,6 +91,7 @@ class GLC:
     '''
 
     def setFirst(self):
+        self._first.clear()
         debug = False
 
         for terminal in self.T:  # FIRST de um terminal é o próprio terminal
@@ -142,6 +142,7 @@ class GLC:
     '''
 
     def setFollow(self):
+        self._follow.clear()
         self.setFirst()
 
         debug = False
@@ -276,12 +277,12 @@ class GLC:
             return transitions
 
         # 1. Criar autômato
-        debug = True
+        debug = False
 
         sigma = self.N.copy()
         sigma.extend(self.T.copy())
         sigma.append('$')
-        af = AF(sigma=sigma)
+        af = AF(sigma=sigma, K=[], delta=[], s=None, F=[], name='')
 
         I = [{f"{self.S}'": [['.', self.S]]}]  # Cria conjunto de itens I com I0 contendo somente S' ::= .S
         af.s = "I0"  # Estado inicial é I0
@@ -292,13 +293,13 @@ class GLC:
             af.K.append(f"I{i}")  # Insere estado Ii
 
             if debug:
-                # print(f"I{i}: {Ii}")
-                pass
+                print(f"I{i}: {Ii}")
 
             goto = getGoto(Ii)  # Calcula Goto(Ii)
             if f"{self.S}'" in Ii and [self.S, "."] in Ii[f"{self.S}'"]:  # Estado final
                 af.delta.append((f"I{i}", "$", "acc"))
-            print(f"GOTO(I{i}): {goto}")
+            if debug:
+                print(f"GOTO(I{i}): {goto}")
 
             # Cria novos itens I
             for symbol, newI in goto.items():  # Para cada novo I newI encontrado a partir de Ii
@@ -324,7 +325,8 @@ class GLC:
                                 break
                         else:  # Ij é equivalente a newI
                             af.delta.append((f"I{i}", symbol, f"I{j}"))
-                            # print(f"Found equivalent I{j}: {I[j]}")
+                            if debug:
+                                print(f"Found equivalent I{j}: {I[j]}")
                             break
                 else:
                     af.delta.append((f"I{i}", symbol, f"I{len(I)}"))
@@ -335,7 +337,7 @@ class GLC:
             af.plot()
 
         # 2. Criar tabela SLR
-        debug = True
+        debug = False
 
         extendedGrammar = GLC(self.N.copy(), self.T.copy(), f"{self.S}'", self.P.copy())
         extendedGrammar.N.append(extendedGrammar.S)
@@ -379,13 +381,15 @@ class GLC:
                 print(f"{i}: {line}")
 
         # 3. Reconhecimento da sentença
-        debug = True
+        debug = False
 
         sentence = sentence.split()
 
         sentence.append("$")
 
         def recognize(sentence):
+            if debug:
+                print(sentence)
             stack = [0]
             i = 0
             while True:

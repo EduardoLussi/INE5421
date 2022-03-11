@@ -1,0 +1,18 @@
+#nonterminals
+S
+A
+B
+#terminals
+or
+and
+(
+)
+not
+true
+false
+#start
+S
+#productions
+S ::= S or A | A
+A ::= A and B | B
+B ::= not B | ( S ) | true | false

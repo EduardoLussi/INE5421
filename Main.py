@@ -277,20 +277,22 @@ while True: # Loop principal do programa
     elif op == 11:
         print(f"\n----------- IMPORTAR GRAMÁTICA ----------\n")
 
-        name = input("Nome ds nova gramática: ")
+        name = input("Nome da nova gramática: ")
         file = input("Nome do arquivo: ")
 
         glc = GLC(name=name)
 
         try:
-            glc.readData(f"testes/{file}")
+            glc.read_grammar(f"testes/{file}")
         except:
             print("\n\033[1;31mArquivo inválido\033[0;0m")
             continue
 
         Grammars.append(glc)
 
-        print(f"\n\033[1;Gramática {glc.name} importado!\033[0;0m")
+        print(f"\n\033[1;32mGramática {glc.name} importada!\033[0;0m")
+
+        input("\nPressione enter para continuar...")
 
     elif op == 12:
         print(f"\n------- VISUALIZAÇÃO DE GRAMÁTICA -------\n")
@@ -309,7 +311,7 @@ while True: # Loop principal do programa
 
         input("Pressione enter para continuar...")
     elif op == 13:
-        print(f"\n--------- REMOÇÃO DE AUTÔMATO ---------\n")
+        print(f"\n--------- REMOÇÃO DE GRAMÁTICA ---------\n")
         for i, glc in enumerate(Grammars):
             print(f"{i + 1}- {glc.name}")
 
@@ -327,7 +329,7 @@ while True: # Loop principal do programa
 
         del Grammars[glcId]
 
-        print(f"\n\033[1;32mAutômato {name} removido!\033[0;0m")
+        print(f"\n\033[1;32mGramática {name} removida!\033[0;0m")
 
     elif op == 14:
         print(f"\n------- EXPORTAR GRAMÁTICA -------\n")
@@ -343,7 +345,7 @@ while True: # Loop principal do programa
         name = Grammars[glcId].name
         Grammars[glcId].export(f"testes/{name}.txt")
 
-        print(f"\n\033[1;32mAutômato {name} exportado!\033[0;0m")
+        print(f"\n\033[1;32mGramática {name} exportada!\033[0;0m")
 
     elif op == 15:
         ...
@@ -382,15 +384,21 @@ while True: # Loop principal do programa
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-
+        
         grammar = Grammars[grammarId]
 
         sentence = input("Digite a sentença com símbolos separados por espaço: ").strip()
 
-        if grammar.slrRecognizeSentence(sentence):
-            print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
-        else:
+        try:
+            if grammar.slrRecognizeSentence(sentence):
+                print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
+            else:
+                print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
+        except:
             print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
+
+        
+        input("\nPressione enter para continuar...")
 
     else:
         break
