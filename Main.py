@@ -1,5 +1,8 @@
+import copy
+
 from AF import AF
 from afd_operations import union, intersection
+from GLC import GLC
 
 AFs = []    # Lista de autômatos
 Grammars = []   # Lista de gramáticas
@@ -272,17 +275,102 @@ while True: # Loop principal do programa
             af.name = input("Digite o nome do novo autômato: ").strip()
             AFs.append(af)
     elif op == 11:
-        ...
+        print(f"\n----------- IMPORTAR GRAMÁTICA ----------\n")
+
+        name = input("Nome da nova gramática: ")
+        file = input("Nome do arquivo: ")
+
+        glc = GLC(name=name)
+
+        try:
+            glc.read_grammar(f"testes/{file}")
+        except:
+            print("\n\033[1;31mArquivo inválido\033[0;0m")
+            continue
+
+        Grammars.append(glc)
+
+        print(f"\n\033[1;32mGramática {glc.name} importada!\033[0;0m")
+
+        input("\nPressione enter para continuar...")
+
     elif op == 12:
-        ...
+        print(f"\n------- VISUALIZAÇÃO DE GRAMÁTICA -------\n")
+        for i, glc in enumerate(Grammars):
+            print(f"{i + 1}- {glc.name}")
+
+        try:
+            glcId = int(input("\nEscolha a gramática: ")) - 1
+            assert (glcId in range(0, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        print(f"\nProduções de {Grammars[glcId].name}:\n")
+        print(Grammars[glcId])
+
+        input("Pressione enter para continuar...")
     elif op == 13:
-        ...
+        print(f"\n--------- REMOÇÃO DE GRAMÁTICA ---------\n")
+        for i, glc in enumerate(Grammars):
+            print(f"{i + 1}- {glc.name}")
+
+        try:
+            glcId = int(input("\nEscolha o autômato (0 para cancelar): ")) - 1
+            assert (glcId in range(-1, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        if glcId < 0:
+            continue
+
+        name = Grammars[glcId].name
+
+        del Grammars[glcId]
+
+        print(f"\n\033[1;32mGramática {name} removida!\033[0;0m")
+
     elif op == 14:
-        ...
+        print(f"\n------- EXPORTAR GRAMÁTICA -------\n")
+        for i, glc in enumerate(Grammars):
+            print(f"{i + 1}- {glc.name}")
+
+        try:
+            glcId = int(input("\nEscolha a gramática: ")) - 1
+            assert (glcId in range(0, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+        name = Grammars[glcId].name
+        Grammars[glcId].export(f"testes/{name}.txt")
+
+        print(f"\n\033[1;32mGramática {name} exportada!\033[0;0m")
+
     elif op == 15:
         ...
     elif op == 16:
-        ...
+        print(f"\n----- FATORAÇÃO -----\n")
+        for i, grammar in enumerate(Grammars):
+            print(f"{i + 1}- {grammar.name}")
+
+        try:
+            grammarId = int(input("\nEscolha a gramática: ")) - 1
+            assert (grammarId in range(0, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        grammar = copy.copy(Grammars[grammarId])
+        grammar.left_factoring()
+        print(grammar)
+
+        save = input("Deseja salvar a gramática (s/n)? ").strip()
+
+        if save == 's':
+            grammar.name = input("Digite o nome do novo autômato: ").strip()
+            Grammars.append(grammar)
+        
     elif op == 17:
         ...
     elif op == 18:
@@ -296,15 +384,21 @@ while True: # Loop principal do programa
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-
+        
         grammar = Grammars[grammarId]
 
         sentence = input("Digite a sentença com símbolos separados por espaço: ").strip()
 
-        if grammar.slrRecognizeSentence(sentence):
-            print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
-        else:
+        try:
+            if grammar.slrRecognizeSentence(sentence):
+                print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
+            else:
+                print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
+        except:
             print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
+
+        
+        input("\nPressione enter para continuar...")
 
     else:
         break
