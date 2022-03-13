@@ -348,7 +348,27 @@ while True: # Loop principal do programa
         print(f"\n\033[1;32mGramática {name} exportada!\033[0;0m")
 
     elif op == 15:
-        ...
+        print(f"\n----- ELIMINAÇÃO DE RECURSÃO À ESQUERDA -----\n")
+        for i, grammar in enumerate(Grammars):
+            print(f"{i + 1}- {grammar.name}")
+
+        try:
+            grammarId = int(input("\nEscolha a gramática: ")) - 1
+            assert (grammarId in range(0, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        grammar = copy.copy(Grammars[grammarId])
+        grammar.eliminateLeftRecursion()
+        print(grammar)
+
+        save = input("Deseja salvar a gramática (s/n)? ").strip()
+
+        if save == 's':
+            grammar.name = input("Digite o nome do novo autômato: ").strip()
+            Grammars.append(grammar)
+
     elif op == 16:
         print(f"\n----- FATORAÇÃO -----\n")
         for i, grammar in enumerate(Grammars):
@@ -365,7 +385,7 @@ while True: # Loop principal do programa
         grammar.left_factoring()
         print(grammar)
 
-        save = input("Deseja salvar a gramática (s/n)? ").strip()
+        save = input("Deseja adicionar a nova gramática (s/n)? ").strip()
 
         if save == 's':
             grammar.name = input("Digite o nome do novo autômato: ").strip()
