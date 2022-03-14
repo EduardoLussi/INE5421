@@ -1,13 +1,12 @@
 import copy
 
-from AF import AF
-from afd_operations import union, intersection
+from AF import AF, union, intersection
 from GLC import GLC
 
-AFs = []    # Lista de autômatos
-Grammars = []   # Lista de gramáticas
+AFs = []  # Lista de autômatos
+Grammars = []  # Lista de gramáticas
 
-while True: # Loop principal do programa
+while True:  # Loop principal do programa
     print(f"\n------------ MENU PRINCIPAL ------------\n")
 
     print("1-  Importar autômato")
@@ -53,15 +52,15 @@ while True: # Loop principal do programa
     elif op == 2:
         print(f"\n------- VISUALIZAÇÃO DE AUTÔMATO -------\n")
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
-        
+            print(f"{i + 1}- {af.name}")
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert (afId in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         print(f"\nTabela de transição de {AFs[afId].name}:\n")
         AFs[afId].plot()
 
@@ -70,31 +69,31 @@ while True: # Loop principal do programa
     elif op == 3:
         print(f"\n------- EXPORTAR AUTÔMATO -------\n")
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
-        
+            print(f"{i + 1}- {af.name}")
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert (afId in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
         nameAF = AFs[afId].name
         AFs[afId].exportAF(f"testes/{nameAF}.txt")
-        
+
         print(f"\n\033[1;32mAutômato {nameAF} exportado!\033[0;0m")
-        
+
     elif op == 4:
         print(f"\n--------- REMOÇÃO DE AUTÔMATO ---------\n")
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
+            print(f"{i + 1}- {af.name}")
 
-        try:        
+        try:
             afId = int(input("\nEscolha o autômato (0 para cancelar): ")) - 1
-            assert(afId in range(-1, len(AFs)))
+            assert (afId in range(-1, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         if afId < 0:
             continue
 
@@ -107,15 +106,15 @@ while True: # Loop principal do programa
     elif op == 5:
         print(f"\n----- DETERMINIZAÇÃO DE AUTÔMATO -----\n")
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
-        
+            print(f"{i + 1}- {af.name}")
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert (afId in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-    
+
         afd = AFs[afId].getAFD()
 
         print(f"Autômato {AFs[afId].name} determinizado:\n")
@@ -128,20 +127,20 @@ while True: # Loop principal do programa
             AFs.append(afd)
 
             print(f"\n\033[1;32mAutômato {afd.name} inserido!\033[0;0m")
-            
+
     elif op == 6:
         print(f"\n----- RECONHECIMENTO DE SENTENÇA -----\n")
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
-        
+            print(f"{i + 1}- {af.name}")
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert (afId in range(0, len(AFs)))
             af = AFs[afId]
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-    
+
         sentence = input("\nSentença: ")
 
         if af.compute(sentence):
@@ -152,15 +151,15 @@ while True: # Loop principal do programa
     elif op == 7:
         print(f"\n------- MINIMIZAÇÃO DE AUTÔMATO ------\n")
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
-        
+            print(f"{i + 1}- {af.name}")
+
         try:
             afId = int(input("\nEscolha o autômato: ")) - 1
-            assert(afId in range(0, len(AFs)))
+            assert (afId in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-    
+
         afd = AFs[afId].minimize()
 
         print(f"Autômato {AFs[afId].name} minimizado:\n")
@@ -175,22 +174,22 @@ while True: # Loop principal do programa
             print(f"\n\033[1;32mAutômato {afd.name} inserido!\033[0;0m")
     elif op == 8:
         print(f"\n------- UNIÃO DE AUTÔMATOS FINITOS DETERMINÍSTICOS -------\n")
-        
+
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
+            print(f"{i + 1}- {af.name}")
         try:
             afId1 = int(input("\nEscolha primeiro o autômato: ")) - 1
-            assert(afId1 in range(0, len(AFs)))
+            assert (afId1 in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         for i, af in enumerate(AFs):
             if i == afId1: continue
-            print(f"{i+1}- {af.name}")
+            print(f"{i + 1}- {af.name}")
         try:
             afId2 = int(input("\nEscolha segundo o autômato: ")) - 1
-            assert(afId1 in range(0, len(AFs)))
+            assert (afId1 in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
@@ -212,28 +211,28 @@ while True: # Loop principal do programa
             AFs.append(af_union)
 
             print(f"\n\033[1;32mAutômato {af_union.name} inserido!\033[0;0m")
-            
+
         input("Pressione enter para continuar...")
 
     elif op == 9:
-        
+
         print(f"\n------- INTERSEÇÃO DE AUTÔMATOS FINITOS DETERMINÍSTICOS -------\n")
-        
+
         for i, af in enumerate(AFs):
-            print(f"{i+1}- {af.name}")
+            print(f"{i + 1}- {af.name}")
         try:
             afId1 = int(input("\nEscolha primeiro o autômato: ")) - 1
-            assert(afId1 in range(0, len(AFs)))
+            assert (afId1 in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         for i, af in enumerate(AFs):
             if i == afId1: continue
-            print(f"{i+1}- {af.name}")
+            print(f"{i + 1}- {af.name}")
         try:
             afId2 = int(input("\nEscolha segundo o autômato: ")) - 1
-            assert(afId1 in range(0, len(AFs)))
+            assert (afId1 in range(0, len(AFs)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
@@ -255,7 +254,7 @@ while True: # Loop principal do programa
             AFs.append(af_intersection)
 
             print(f"\n\033[1;32mAutômato {af_intersection.name} inserido!\033[0;0m")
-            
+
         input("Pressione enter para continuar...")
 
     elif op == 10:
@@ -390,21 +389,21 @@ while True: # Loop principal do programa
         if save == 's':
             grammar.name = input("Digite o nome do novo autômato: ").strip()
             Grammars.append(grammar)
-        
+
     elif op == 17:
         ...
     elif op == 18:
         print(f"\n----- RECONHECIMENTO DE SENTENÇA COM SLR(1) -----\n")
         for i, grammar in enumerate(Grammars):
-            print(f"{i+1}- {grammar.name}")
-        
+            print(f"{i + 1}- {grammar.name}")
+
         try:
             grammarId = int(input("\nEscolha a gramática: ")) - 1
-            assert(grammarId in range(0, len(Grammars)))
+            assert (grammarId in range(0, len(Grammars)))
         except:
             print("\n\033[1;31mValor inválido\033[0;0m")
             continue
-        
+
         grammar = Grammars[grammarId]
 
         sentence = input("Digite a sentença com símbolos separados por espaço: ").strip()
@@ -417,7 +416,6 @@ while True: # Loop principal do programa
         except:
             print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
 
-        
         input("\nPressione enter para continuar...")
 
     else:

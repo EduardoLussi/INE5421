@@ -4,7 +4,7 @@ from AF import AF
 
 
 class GLC:
-    '''
+    """
         Uma Gramática Livre de Contexto é uma quadrupla (N, T, P, S) onde:
             - N é o conjunto de símbolos não terminais
             - T é o conjunto de símbolos terminais (o alfabeto)
@@ -14,13 +14,13 @@ class GLC:
                     e delta é uma lista de listas de terminais e não-terminais }
                     (cada sublista de delta é uma lista ordenada que representa
                     uma produção)
-    '''
+    """
 
-    def __init__(self, N=[], T=[], S=None, P=dict(), name=''):
-        self.N = N
-        self.T = T
-        self.S = S
-        self.P = P
+    def __init__(self, N=None, T=None, S=None, P=None, name=''):
+        self.N = N if N else list()
+        self.T = T if T else list()
+        self.S = S if S else list()
+        self.P = P if P else list()
 
         self.name = name
 
@@ -36,6 +36,7 @@ class GLC:
         return glc_str
 
     def read_grammar(self, filename):
+        """Importa gramática de arquivo"""
         with open(filename, 'r') as f:
             # nonterminals
             line = f.readline()
@@ -74,6 +75,7 @@ class GLC:
             self.P = productions
 
     def export(self, file_name):
+        """Exporta gramática para arquivo"""
         with open(file_name, "w") as file:
             file.write("#nonterminals\n")
             for s in self.N:
@@ -86,13 +88,10 @@ class GLC:
             file.write("#productions\n")
             file.write(str(self))
 
-    '''
-        Calcula o conjunto first da gramática
-    '''
-
     def setFirst(self):
+        """Calcula o conjunto first da gramática"""
         self._first.clear()
-        debug = False
+        debug = True
 
         for terminal in self.T:  # FIRST de um terminal é o próprio terminal
             self._first[terminal] = set([terminal])
@@ -131,21 +130,16 @@ class GLC:
                         else:
                             self._first[nonTerminal].add(symbol)
                             break
-
         if debug:
             print(self._first)
 
         return self._first
 
-    '''
-        Calcula o conjunto follow dos não-terminais da gramática
-    '''
-
     def setFollow(self):
+        """Calcula o conjunto follow dos não-terminais da gramática"""
         self._follow.clear()
         self.setFirst()
-
-        debug = False
+        debug = True
 
         if debug:
             print(f"FIRST={self._first}")
@@ -158,24 +152,27 @@ class GLC:
         finished = False
         while not finished:  # Enquanto houver alteração nos FOLLOWS
             finished = True
-            for nonTerminal in self.N:  # Para cada não-terminal nonTerminal
-                for nonTerminalProduction in self.P[
-                    nonTerminal]:  # Para cada produção nonTerminalProduction de nonTerminal
+            # Para cada não-terminal nonTerminal
+            for nonTerminal in self.N:
+                # Para cada produção nonTerminalProduction de nonTerminal
+                for nonTerminalProduction in self.P[nonTerminal]:
                     # 1. Se A ::= alfa B beta e beta != &, então adicione FIRST(beta) em FOLLOW(B)
-                    for i, symbol in enumerate(
-                            nonTerminalProduction[:-1]):  # Para cada símbolo symbol da produção nonTerminalProduction
+                    # Para cada símbolo symbol da produção nonTerminalProduction
+                    for i, symbol in enumerate(nonTerminalProduction[:-1]):
                         if symbol in self.N:  # Somente não-terminais possuem FOLLOW
                             for j in range(i + 1, len(nonTerminalProduction)):  # Verifica símbolos seguintes
-                                firstNonTerminalProductionJ = self._first[nonTerminalProduction[j]].copy()
+                                print(self._first[nonTerminalProduction[j]])
+                                firstNonTerminalProductionJ = self._first[nonTerminalProduction[j]]
                                 if '&' in firstNonTerminalProductionJ:
                                     firstNonTerminalProductionJ.remove('&')
                                 if not firstNonTerminalProductionJ.issubset(self._follow[symbol]):
                                     if debug:
                                         print(
-                                            f"FIRST({nonTerminalProduction[j]})={self._first[nonTerminalProduction[j]]} está contido em FOLLOW({symbol})={self._follow[symbol]}")
+                                            f"FIRST({nonTerminalProduction[j]})={self._first[nonTerminalProduction[j]]}"
+                                            + f"está contido em FOLLOW({symbol})={self._follow[symbol]}")
                                     self._follow[symbol] = self._follow[symbol].union(firstNonTerminalProductionJ)
                                     finished = False
-                                # Se & pertence ao FIRST do símbolo atual nonTerminalProduction[j], continua, senão, para
+                                # Se & pertence ao FIRST do símbolo atual nonTerminalProduction[j] continua, senão, para
                                 if "&" not in self._first[nonTerminalProduction[j]]:
                                     break
                     # 2. Se A ::= alfa B (ou A ::= alfa B beta, onde & pertence à FIRST(beta)),
@@ -187,7 +184,8 @@ class GLC:
                         if not self._follow[nonTerminal].issubset(self._follow[symbol]):
                             if debug:
                                 print(
-                                    f"FOLLOW({nonTerminal})={self._follow[nonTerminal]} está contido em FOLLOW({symbol})={self._follow[symbol]}")
+                                    f"FOLLOW({nonTerminal})={self._follow[nonTerminal]}"
+                                    + f"está contido em FOLLOW({symbol})={self._follow[symbol]}")
                             self._follow[symbol] = self._follow[symbol].union(self._follow[nonTerminal])
                             finished = False
 
@@ -200,16 +198,11 @@ class GLC:
 
         return self._follow
 
-    '''
-        Reconhece sentença via implementação de um SLR(1)
-    '''
-
     def slrRecognizeSentence(self, sentence):
-        '''
-            Retorna o closure (fechamento) de um conjunto de itens
-        '''
+        """Reconhece sentença via implementação de um SLR(1)"""
 
         def setClosure(Item):
+            """Retorna o closure (fechamento) de um conjunto de itens"""
             debug = False
             if debug:
                 print("Calculating Closure...")
@@ -237,14 +230,10 @@ class GLC:
                                     if debug:
                                         print(f"New Production: {symbolAfterPoint} -> {newProduction}")
                 i += 1
-
             return Item
 
-        '''
-            Retorna autômato finito que representa função goto
-        '''
-
         def getGoto(Item):
+            """Retorna autômato finito que representa função goto"""
             debug = False
 
             if debug:
@@ -273,7 +262,6 @@ class GLC:
                             transitions[newProduction[pointIndex]][nonTerminal] = [newProduction]
                         if debug:
                             print(f"New production for transition by {newProduction[pointIndex]}: {newProduction}")
-
             return transitions
 
         # 1. Criar autômato
@@ -291,16 +279,13 @@ class GLC:
         setClosure(I[0])
         for i, Ii in enumerate(I):
             af.K.append(f"I{i}")  # Insere estado Ii
-
             if debug:
                 print(f"I{i}: {Ii}")
-
             goto = getGoto(Ii)  # Calcula Goto(Ii)
             if f"{self.S}'" in Ii and [self.S, "."] in Ii[f"{self.S}'"]:  # Estado final
                 af.delta.append((f"I{i}", "$", "acc"))
             if debug:
                 print(f"GOTO(I{i}): {goto}")
-
             # Cria novos itens I
             for symbol, newI in goto.items():  # Para cada novo I newI encontrado a partir de Ii
                 setClosure(newI)  # Calcula Closure(newI)
@@ -313,8 +298,8 @@ class GLC:
                                 if len(IjSymbolProductions) == len(newI[IjSymbol]):
                                     # Verifica se produções de IjSymbol são iguais as de newI por IjSymbol
                                     for IjSymbolProcutionsElement in IjSymbolProductions:
-                                        if not IjSymbolProcutionsElement in newI[
-                                            IjSymbol]:  # Encontrada produção diferente
+                                        # Encontrada produção diferente
+                                        if not IjSymbolProcutionsElement in newI[IjSymbol]:
                                             differentProductions = True
                                             break
                                 else:
@@ -331,36 +316,29 @@ class GLC:
                 else:
                     af.delta.append((f"I{i}", symbol, f"I{len(I)}"))
                     I.append(newI)
-
         if debug:
             print("\n Autômato LR(0):")
             af.plot()
-
         # 2. Criar tabela SLR
         debug = False
-
         extendedGrammar = GLC(self.N.copy(), self.T.copy(), f"{self.S}'", self.P.copy())
         extendedGrammar.N.append(extendedGrammar.S)
         extendedGrammar.P[extendedGrammar.S] = [[self.S]]
-
         extendedGrammar.setFollow()
 
         SLRTable = []
         for i, Ii in enumerate(I):
             SLRTable.append(dict())
-
             # Shifts
             for terminal in self.T:
                 terminalTransition = af.getTransition(f"I{i}", terminal)
                 if len(terminalTransition):
                     SLRTable[i][terminal] = f"s{terminalTransition[0][1:]}"
-
             # Desvios
             for nonTerminal in self.N:
                 nonTerminalTransition = af.getTransition(f"I{i}", nonTerminal)
                 if len(nonTerminalTransition):
                     SLRTable[i][nonTerminal] = f"{nonTerminalTransition[0][1:]}"
-
             # Reduces
             for item, productions in Ii.items():
                 if item == f"{self.S}'":  # Aceitação acc
@@ -374,7 +352,6 @@ class GLC:
                             for follow in extendedGrammar._follow[item]:
                                 productionIndex = self.P[item].index(productionWithoutPoint)
                                 SLRTable[i][follow] = f"r {item} {productionIndex}"
-
         if debug:
             print("Tabela SLR:")
             for i, line in enumerate(SLRTable):
@@ -384,7 +361,6 @@ class GLC:
         debug = False
 
         sentence = sentence.split()
-
         sentence.append("$")
 
         def recognize(sentence):
@@ -394,15 +370,11 @@ class GLC:
             i = 0
             while True:
                 symbol = sentence[i]
-
                 action = SLRTable[stack[-1]][symbol]
-
                 if debug:
                     print(sentence[i:], stack, action)
-
                 if action == "acc":
                     return True
-
                 if action[0] == "s":
                     stack.append(int(action[1:]))
                     i += 1
@@ -424,9 +396,7 @@ class GLC:
                                     break
                             if foundSymbol:
                                 break
-
                         stack.pop()
-
                     stack.append(int(SLRTable[stack[-1]][reduced]))
 
         try:
@@ -436,20 +406,26 @@ class GLC:
                 print(f"Sentença não reconhecida. {err}")
             return False
 
-    '''
-        Retorna uma gramática equivalente, sem símbolos improdutívos
-    '''
-
     def removeUnproductiveSymbols(self):
+        """Retorna uma gramática equivalente, sem símbolos improdutivos"""
         markedTSymbols = []
         productions = dict()
+
+        def dict_deep_length(dic):
+            l = 0
+            for e in dic:
+                if isinstance(e, list):
+                    l += len(e)
+                else:
+                    l += 1
+            return l
 
         productionCount = 0
 
         while True:
-            for nonTerminal, production in [(nonTerm, prod) 
-                                                for nonTerm in self.N
-                                                for prod in self.P[nonTerminal]]:
+            for nonTerminal, production in [(nonTerm, prod)
+                                            for nonTerm in self.N
+                                            for prod in self.P[nonTerminal]]:
 
                 if productions[nonTerminal] and production in productions[nonTerminal]:
                     break
@@ -478,60 +454,57 @@ class GLC:
 
         return GLC(productions.keys(), markedTSymbols, self.S, productions, self.name)
 
-    '''
-        Elimina epsilon produções
-    '''
-    def eliminateEpsilonProductions(self, N=self.N, P=self.P):
-        for nonTerminal in N:
-            for production in P[nonTerminal]:
-                productionBag = list()
-                hasEpsilonProduction = False
-                if production[0] == '&':
-                    hasEpsilonProduction = True
-                else:
-                    productionBag.push(production)
-                
-    '''
-        Retorna uma gramática equivalente, eliminando recursão a esquerda
-    '''
     def eliminateLeftRecursion(self):
+        """Retorna uma gramática equivalente, eliminando recursão a esquerda"""
 
-        newN = list()
-        newP = dict()
-
-        def eliminateDirectLeftRecursion(self, nonTerminal, P=self.P):
-            alphas  = list()
-            betas   = list()
-            ntDash  = f"{nonTerminal}\'" 
+        def eliminateDirectLeftRecursion(nonTerminal, P=self.P):
+            """ Utilitário para eliminação de recursão direta"""
+            alphas = list()
+            betas = list()
+            ntDash = f"{nonTerminal}\'"
             for production in P[nonTerminal]:
                 if production[0] is nonTerminal:
                     alphas.append(production[1:])
-                else if production[0] is '&':
+                elif production[0] == '&':
                     pass
                 else:
                     betas.append(production)
-            ntP     = [beta .append(ntDash) for beta  in betas]
-            ntDashP = [alpha.append(ntDash) for alpha in alphas].append('&')
+            ntProductions = [beta.append(ntDash) for beta in betas]
+            ntDashProductions = [alpha.append(ntDash) for alpha in alphas].append('&')
 
-            return (ntProductions, ntDashProductions, ntDash)
+            return ntProductions, ntDashProductions, ntDash
+
+        def eliminateEpsilonProductions(N, P):
+            """Utilitário para eliminação de epsilon produções"""
+            for nonTerminal in N:
+                for production in P[nonTerminal]:
+                    productionBag = list()
+                    hasEpsilonProduction = False
+                    if production[0] == '&':
+                        hasEpsilonProduction = True
+                    else:
+                        productionBag.push(production)
+
+        newN = list()
+        newP = dict()
 
         # elimina recursoes diretas
         for nonTerminal in self.N:
             ntP, ntDashP, ntDash = eliminateDirectLeftRecursion(nonTerminal)
             newN.push(nonTerminal)
             newN.push(ntDash)
-            newP[nonTerminal]   = ntP
-            newP[ntDash]        = ntDashP
+            newP[nonTerminal] = ntP
+            newP[ntDash] = ntDashP
 
         # elimina &-producoes
         eliminateEpsilonProductions(newN, newP)
-        
+
         # elimina recursoes indiretas
         newNewN = list()
         nonTerminalEnumeration = enumerate(newN)
-        for (i, nonTerminali) in nonTerminalEnumeration: 
-           for nonTerminalj in [nonTerminalj for j, nonTermninalj in nonTerminalEnumeration if j < i]
-               for production in newP[nonTerminali]:
+        for (i, nonTerminali) in nonTerminalEnumeration:
+            for nonTerminalj in [nonTerminalj for j, nonTermninalj in nonTerminalEnumeration if j < i]:
+                for production in newP[nonTerminali]:
                     if production[0] is nonTerminalj:
                         newP[nonTerminali].remove(production)
                         for productionBeta in newP[nonTerminalj]:
@@ -539,14 +512,16 @@ class GLC:
             (ntP, ntDashP, ntDash) = eliminateDirectLeftRecursion(nonTerminali, newP)
             newNewN.push(nonTerminali)
             newNewN.push(ntDash)
-            newP[nonTerminal]   = ntP
-            newP[ntDash]        = ntDashP
+            newP[nonTerminal] = ntP
+            newP[ntDash] = ntDashP
         newN = newNewN
 
         # elimina &-producoes
         eliminateEpsilonProductions(newN, newP)
 
         return GLC(newN, self.T, self.S, newP, self.name)
+
+    """ ---------------- FATORAÇÃO ----------------- """
 
     def left_factoring(self, *, iters=1):
         """Fatoração de GLC"""
@@ -611,15 +586,15 @@ class GLC:
                     productions.append(production)
             self.P[non_terminal] = productions
 
-    def __remove_indirect_non_determinism(self, n_derivations=2):
+    def __remove_indirect_non_determinism(self):
         """
         Remove não determinismos indiretos, por substituição.
+
         Normalmente, se faria a substituição somente dos não-terminais que fossem
         gerar o não determinismo.
         Neste caso, não fazemos esta busca, optando-se por este algoritmo mais simples,
         que realiza a substituição não recursiva de todos os terminais. Se houver algum
         determinismo direto, ele pode ser eliminado pelo algoritmo que remove os diretos.
-        O parâmetro n_derivations permite limitar o numero de derivações feitas.
         """
         non_terminals = self.N
         derived = copy.deepcopy(self)
