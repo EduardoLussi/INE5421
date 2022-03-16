@@ -454,6 +454,55 @@ class GLC:
 
         return GLC(productions.keys(), markedTSymbols, self.S, productions, self.name)
 
+    def llRecognizeSentence(self, sentence):
+        """Reconhece sentença via implementação de um LL(1)"""
+
+        table = self.generateLLparseTable()
+        stack = ["$", self.S]
+        
+        for symbol in sentence:
+            while symbol != stack[-1]:
+                if symbol not in table[stack[-1]]:
+                    return False
+                prod = table[stack[-1]][symbol]
+                stack.pop()
+                if prod == ["&"]:
+                    continue
+                else:
+                    for p in reversed(prod):
+                        stack.append(p)
+            stack.pop()
+        print (stack)
+        return stack == ["$"]
+
+
+    def generateLLparseTable(self):
+        self.setFirst()
+        self.setFollow()
+        table = {}
+            
+        # itero sobre as produções de cada terminal da gramática
+        for non_terminal, productions in self.P.items():
+            table[non_terminal] = {}
+            # itero sobre as produções do não terminal
+            for alpha in productions:
+                firsts = self._first[alpha[0]]
+                print(f"{alpha[0]} -> {firsts}")
+                for symbol in firsts:
+                    if symbol in self.T:
+                        if symbol == "&":
+                            table[non_terminal]["$"] = alpha
+                        else:
+                            table[non_terminal][symbol] = alpha
+                if '&' in firsts:
+                    for symbol in self._follow[non_terminal]:
+                        if symbol in self.T:
+                            if symbol == "&":
+                                table[non_terminal]["$"] = alpha
+                            else:
+                                table[non_terminal][symbol] = alpha
+        return table
+
     def eliminateLeftRecursion(self):
         """Retorna uma gramática equivalente, eliminando recursão a esquerda"""
 
