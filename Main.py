@@ -391,7 +391,36 @@ while True:  # Loop principal do programa
             Grammars.append(grammar)
 
     elif op == 17:
-        ...
+        print(f"\n----- RECONHECIMENTO DE SENTENÇA COM LL(1) -----\n")
+
+        print("ATENÇÃO: Este reconhecedor assume que a gramática já está fatorada e não possui recursões à esquerda.")
+
+        for i, grammar in enumerate(Grammars):
+            print(f"{i + 1}- {grammar.name}")
+
+        try:
+            grammarId = int(input("\nEscolha a gramática: ")) - 1
+            assert (grammarId in range(0, len(Grammars)))
+        except:
+            print("\n\033[1;31mValor inválido\033[0;0m")
+            continue
+
+        grammar = Grammars[grammarId]
+
+        sentence = input("Digite a sentença com símbolos separados por espaço: ").strip()
+
+        steps = True if input("Deseja ver o passo a passo? [s/N]\n").strip() in ['S', 's', 'sim'] else False
+
+        try:
+            if grammar.llRecognizeSentence(sentence, show_steps=steps):
+                print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
+            else:
+                print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
+        except:
+            print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
+
+        input("\nPressione enter para continuar...")
+
     elif op == 18:
         print(f"\n----- RECONHECIMENTO DE SENTENÇA COM SLR(1) -----\n")
         for i, grammar in enumerate(Grammars):

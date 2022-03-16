@@ -503,7 +503,7 @@ def cartesian_product(af1, af2, fully_explicit=True):
     return af1_F, af2_F, af1_K, af2_K, af_prod
 
 
-def format_product(af: AF):
+def format_product(af):
     """Formatador para tuplas usadas no produto cartesiano"""
 
     def merge_tuples(x): return '{' + f'{x[0]},{x[1]}' + '}'
@@ -517,7 +517,7 @@ def format_product(af: AF):
     af.delta = list(zip(*delta))
 
 
-def union(af1: AF, af2: AF) -> AF:
+def union(af1, af2):
     """Utiliza o produto cartesiano para gerar a união de dois AFDs"""
     af1_F, af2_F, af1_K, af2_K, af_prod = cartesian_product(af1, af2)
     final_union = list(set(product(af1_F, af2_K)) | set(product(af1_K, af2_F)))
@@ -527,7 +527,7 @@ def union(af1: AF, af2: AF) -> AF:
     return af_prod
 
 
-def intersection(af1: AF, af2: AF) -> AF:
+def intersection(af1, af2):
     """Utiliza o produto cartesiano para gerar a interseção de dois AFDs"""
     af1_F, af2_F, af1_K, af2_K, af_prod = cartesian_product(af1, af2)
     final_intersection = list(product(af1_F, af2_F))

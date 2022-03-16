@@ -91,14 +91,13 @@ class GLC:
     def setFirst(self):
         """Calcula o conjunto first da gramática"""
         self._first.clear()
-        debug = True
+        debug = False
 
         for terminal in self.T:  # FIRST de um terminal é o próprio terminal
             self._first[terminal] = set([terminal])
 
         for nonTerminal in self.N:  # Definição dos first de cada não-terminal
             self._first[nonTerminal] = set()
-
         # 1. Se X ::= aY, a pertence à FIRST(X)
         for nonTerminal in self.N:
             for nonTerminalProduction in self.P[nonTerminal]:
@@ -139,7 +138,7 @@ class GLC:
         """Calcula o conjunto follow dos não-terminais da gramática"""
         self._follow.clear()
         self.setFirst()
-        debug = True
+        debug = False
 
         if debug:
             print(f"FIRST={self._first}")
@@ -161,7 +160,6 @@ class GLC:
                     for i, symbol in enumerate(nonTerminalProduction[:-1]):
                         if symbol in self.N:  # Somente não-terminais possuem FOLLOW
                             for j in range(i + 1, len(nonTerminalProduction)):  # Verifica símbolos seguintes
-                                print(self._first[nonTerminalProduction[j]])
                                 firstNonTerminalProductionJ = self._first[nonTerminalProduction[j]]
                                 if '&' in firstNonTerminalProductionJ:
                                     firstNonTerminalProductionJ.remove('&')
@@ -430,7 +428,7 @@ class GLC:
                 if productions[nonTerminal] and production in productions[nonTerminal]:
                     break
 
-                nonMarked = copy(production)
+                nonMarked = copy.copy(production)
                 for symbol in production:
                     # remove todas as ocorrências de symbol
                     if symbol in self.T:
@@ -454,40 +452,63 @@ class GLC:
 
         return GLC(productions.keys(), markedTSymbols, self.S, productions, self.name)
 
-    def llRecognizeSentence(self, sentence):
-        """Reconhece sentença via implementação de um LL(1)"""
+    def llRecognizeSentence(self, sentence, show_steps=False):
+        """Reconhece sentença via implementação de um analisador LL(1)"""
 
         table = self.generateLLparseTable()
+
+        if show_steps:
+            from pandas import DataFrame
+            print(f"\nMostrando passos para o reconhecimento da sentença {' '.join(sentence)} com a gramática:")
+            print(self)
+            print('Conjuntos FIRST')
+            for symbol, firsts in self._first.items():
+                print(f'FIRST({symbol}) = {firsts}')
+            print('\nTabela de transição LL(1)')
+            print(DataFrame(table).transpose().fillna('-'))
+            print()
+
         stack = ["$", self.S]
-        
-        for symbol in sentence:
-            while symbol != stack[-1]:
-                if symbol not in table[stack[-1]]:
-                    return False
-                prod = table[stack[-1]][symbol]
+        sentence += '$'  # adiciona fim da leitura
+
+        i = 0
+        symbol = sentence[i]
+        while stack != ['$'] and i < len(sentence):
+            if show_steps:
+                print(f'Cabeçote: {symbol}; Pilha: {stack}')
+            if stack[-1] in self.T:
+                if i + 1 < len(sentence):
+                    i += 1
+                symbol = sentence[i]
                 stack.pop()
-                if prod == ["&"]:
-                    continue
-                else:
-                    for p in reversed(prod):
-                        stack.append(p)
+                continue
+            if symbol not in table[stack[-1]]:
+                break
+            prod = table[stack[-1]][symbol]
             stack.pop()
-        print (stack)
+            if prod == ["&"]:
+                continue
+            elif prod:
+                for p in reversed(prod):
+                    stack.append(p)
+        output = 'aceita' if stack == ["$"] else 'rejeita'
+        if show_steps:
+            print(f'Cabeçote: {symbol}; Pilha: {stack}')
+            print(f'\n{output} sentença')
         return stack == ["$"]
 
-
     def generateLLparseTable(self):
+        """Gera tabela de parse LL(1)"""
         self.setFirst()
         self.setFollow()
         table = {}
-            
+
         # itero sobre as produções de cada terminal da gramática
         for non_terminal, productions in self.P.items():
             table[non_terminal] = {}
             # itero sobre as produções do não terminal
             for alpha in productions:
                 firsts = self._first[alpha[0]]
-                print(f"{alpha[0]} -> {firsts}")
                 for symbol in firsts:
                     if symbol in self.T:
                         if symbol == "&":
@@ -523,7 +544,10 @@ class GLC:
 
             return ntProductions, ntDashProductions, ntDash
 
+        hasEpsilonProduction = False
+
         def eliminateEpsilonProductions(N, P):
+            nonlocal hasEpsilonProduction
             """Utilitário para eliminação de epsilon produções"""
             for nonTerminal in N:
                 for production in P[nonTerminal]:
@@ -574,7 +598,7 @@ class GLC:
 
     def left_factoring(self, *, iters=1):
         """Fatoração de GLC"""
-        while iters > 0:
+        while iters > 0 and self.__remove_indirect_non_determinism():
             self.__remove_indirect_non_determinism()
             self.__remove_direct_non_determinism()
             iters -= 1
@@ -598,7 +622,7 @@ class GLC:
                             break
                         prefix.append(p1)
                     if prefix and prefix not in direct[non_terminal]:
-                        direct[non_terminal].append(prefix)
+                       direct[non_terminal].append(prefix)
 
         def test_prefixing(substring1, substring2):
             for sub1, sub2 in zip(substring1, substring2):
