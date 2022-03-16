@@ -75,3 +75,9 @@ As gramáticas são inseridas em arquivos de texto localizados na pasta "testes"
 As sentenças são inseridas com espaços entre os terminais.
 
 Ex: not ( true or false ) and true
+
+### Requisitos
+
+No geral, o único requisito para executar este app é possuir python >= 3.6.
+
+Para vizualizar o passo-a-passo do reconhecimento de sentenças utilizando parser LL(1) é preciso que o usuário possua também o pacote `pandas`, usado para formatar e imprimir a tabela de análise.
