@@ -599,63 +599,57 @@ class GLC:
 
     def left_factoring(self, *, iters=10):
         """Fatoração de GLC"""
+        #podemos comçear removendo determinismos diretos, para facilitar o trabalho
+        self.__remove_direct_non_determinism()
+        print(self)
         while iters > 0 and self.__remove_indirect_non_determinism():
+            print(self)
+            self.__remove_direct_non_determinism()
+            print(self)
             iters -= 1
 
     def __remove_direct_non_determinism(self):
-        """
-        Encontra e remove determinismos diretos na gramática
-        Para cada não-terminal, busca produções que comecem com o(s) mesmo(s) símbolo(s).
-        Para cada produção salva, elimina não determinismo.
-        """
-        def test_prefixing(substring1, substring2):
-            for sub1, sub2 in zip(substring1, substring2):
-                if sub1 != sub2:
-                    return False
-            return True
-
-        for non_terminal in self.N:
+        productions = self.P
+        new_productions = {}
+        for non_terminal in productions:
+            new_productions[non_terminal] = []
             prefixes = []
-            productions = self.P[non_terminal]
-            for i, prod1 in enumerate(productions):
-                for _, prod2 in enumerate(productions[i + 1:]):
-                    # avaliamos se os primeiros símbolos dos dois fatores são iguais.
-                    prefix = []
+            for prod1 in productions[non_terminal]:
+                if not prefixes:
+                    prefixes.append(prod1)
+                    continue
+                found_pref = False
+                prefix = []
+                for i, prod2 in enumerate(prefixes):
                     for p1, p2 in zip(prod1, prod2):
                         if p1 != p2:
                             break
                         prefix.append(p1)
                     if prefix and prefix not in prefixes:
-                        prefixes.append(prefix)
-                        break
-
-            if not prefixes:
-                continue
-            productions = list()
-            for prefix in prefixes:
-                new_symbol = f"{non_terminal}'"
-                self.N.append(new_symbol)
-                if prefix + [new_symbol] not in productions:
-                    productions.append(prefix + [new_symbol])
-                prod_list = list()
-                for production in self.P[non_terminal]:
-                    if not test_prefixing(prefix, production):
-                        continue
-                    prod = production[len(prefix):]
-                    if not prod:  # para produções "vazias", colocamos &
-                        prod = ['&']
-                    if prod not in prod_list:
-                        prod_list.append(prod)
-                self.P[new_symbol] = prod_list
-
-            for production in self.P[non_terminal]:
-                prefixed = False
-                for prefix in prefixes:
-                    if not prefixed and test_prefixing(prefix, production):
-                        prefixed = True
-                if not prefixed and production not in productions:
-                    productions.append(production)
-            self.P[non_terminal] = productions
+                        prefixes[i] = prefix
+                        found_pref = True
+                if not found_pref:
+                    prefixes.append(prod1)
+            for i, pref in enumerate(prefixes):
+                prod_aux = []
+                for prod in productions[non_terminal]:
+                    # testamos se a produção começa com o prefixo salvo em pref
+                    if len(pref) <= len(prod) and pref == prod[:len(pref)]:
+                        prod_aux.append(prod)
+                if len(prod_aux) > 1:
+                    new_symbol = non_terminal + (i+1)*"'"
+                    self.N.append(new_symbol)
+                    new_prod = pref + [new_symbol]
+                    if new_prod not in new_productions[non_terminal]:
+                        new_productions[non_terminal].append(new_prod)
+                    new_productions[new_symbol] = []
+                    for p in prod_aux:
+                        p = p[len(pref):]
+                        p = p if len(p) > 0 else ['&']
+                        new_productions[new_symbol].append(p)
+                else:
+                    new_productions[non_terminal].append(pref)
+        self.P = new_productions
 
     def derive(self, prod):
         """Gera lista de cadeias derivadas da produção"""
@@ -711,7 +705,5 @@ class GLC:
                 for d in derivations:
                     if d not in self.P[s]:  # precisamos deste if por estarmos usando lists e não sets
                         self.P[s].append(d)
-        print(self)
         # remove nõa-determinismos diretos pre-existentes e criados pela derivação
-        self.__remove_direct_non_determinism()
         return changed

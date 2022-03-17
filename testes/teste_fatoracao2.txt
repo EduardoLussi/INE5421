@@ -4,6 +4,8 @@ A
 B
 C
 D
+C'
+S'
 #terminals
 a
 b
@@ -14,8 +16,10 @@ f
 #start
 S
 #productions
-S ::= A C | B C
+S ::= a S' | d D e C' | c C e C'
+S' ::= B e C' | D e C'
 A ::= a D | c C
 B ::= a B | d D
-C ::= e C | e A
+C ::= e C'
+C' ::= C | A
 D ::= f D | C B

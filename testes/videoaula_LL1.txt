@@ -5,8 +5,8 @@ T
 T'
 F
 #terminals
-∨
-∧
+v
+^
 id
 ¬
 &
@@ -14,7 +14,7 @@ id
 E
 #productions
 E ::= T E'
-E' ::= ∨ T E' | &
+E' ::= v T E' | &
 T ::= F T'
-T' ::= ∧ F T' | &
+T' ::= ^ F T' | &
 F ::= ¬ F | id
