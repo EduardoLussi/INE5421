@@ -648,19 +648,19 @@ class GLC:
         if debug:
             print("--> entering eliminateLeftRecursion")
 
-        def eliminateDirectLeftRecursion(nonTerminal, P=self.P):
+        def eliminateDirectLeftRecursion(nonTerminal):
             """ Utilitário para eliminação de recursão direta"""
 
             if debug:
                 print(f"entering eliminateDirectLeftRecursion for {nonTerminal}")
-                print(f"productions before: {P[nonTerminal]}")
+                print(f"productions before: {self.P[nonTerminal]}")
 
             alphas = list()
             betas = list()
             ntDash = f"{nonTerminal}\'"
             epsilonFlag = False
             
-            for production in P[nonTerminal]:
+            for production in self.P[nonTerminal]:
                 if production[0] is nonTerminal:
                     alpha = production[1:].copy()
                     alpha.append(ntDash)
@@ -675,8 +675,9 @@ class GLC:
             if len(alphas) > 0:
                 alphas.append(['&'])
 
-                P[ntDash] = alphas
-                P[nonTerminal] = betas
+                self.P[ntDash] = alphas
+                self.N.append(ntDash)
+                self.P[nonTerminal] = betas
                 
                 if debug:
                     print("new productions:")
@@ -697,24 +698,22 @@ class GLC:
         if debug:
             print("--> initiating indirect recursion removal")
 
-        newN = self.N.copy()
-        newP = self.P.copy()
-        nonTerminalEnumeration = enumerate(newN)
+        nonTerminalEnumeration = enumerate(self.N)
         for (i, nonTerminali) in nonTerminalEnumeration:
             for nonTerminalj in [nonTerminalj for j, nonTermninalj in nonTerminalEnumeration if j < i]:
-                for production in newP[nonTerminali]:
+                for production in self.P[nonTerminali]:
                     if production[0] is nonTerminalj:
-                        newP[nonTerminali].remove(production)
-                        for productionBeta in newP[nonTerminalj]:
+                        self.P[nonTerminali].remove(production)
+                        for productionBeta in self.P[nonTerminalj]:
                             productionBeta = productionBeta.copy()
                             productionBeta.append(production[1:].copy())
-                            newP[nonTerminali].append(productionBeta)
-            eliminateDirectLeftRecursion(nonTerminali, newP)
+                            self.P[nonTerminali].append(productionBeta)
+            eliminateDirectLeftRecursion(nonTerminali)
 
         # elimina &-producoes
         # self.eliminateEpsilonProductions()
 
-        return GLC(newN, self.T, self.S, newP, self.name)
+        return GLC(self.N, self.T, self.S, self.P, self.name)
 
     """ ---------------- FATORAÇÃO ----------------- """
 
