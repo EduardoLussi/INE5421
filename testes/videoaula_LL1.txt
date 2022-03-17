@@ -1,0 +1,20 @@
+#nonterminals
+E
+E'
+T
+T'
+F
+#terminals
+v
+^
+id
+¬
+&
+#start
+E
+#productions
+E ::= T E'
+E' ::= v T E' | &
+T ::= F T'
+T' ::= ^ F T' | &
+F ::= ¬ F | id

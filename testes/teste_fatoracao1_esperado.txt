@@ -1,0 +1,21 @@
+#nonterminals
+S
+A
+B
+C
+S'
+S''
+#terminals
+a
+b
+c
+&
+#start
+S
+#productions
+S ::= a S'
+S' ::= C | a | b S''
+S'' ::= & | B
+A ::= b B | a
+B ::= a | b
+C ::= & | c

@@ -1,0 +1,25 @@
+#nonterminals
+S
+A
+B
+C
+D
+C'
+S'
+#terminals
+a
+b
+c
+d
+e
+f
+#start
+S
+#productions
+S ::= a S' | d D e C' | c C e C'
+S' ::= B e C' | D e C'
+A ::= a D | c C
+B ::= a B | d D
+C ::= e C'
+C' ::= C | A
+D ::= f D | C B
