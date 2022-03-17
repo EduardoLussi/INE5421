@@ -454,53 +454,178 @@ class GLC:
 
         return GLC(productions.keys(), markedTSymbols, self.S, productions, self.name)
 
+    def eliminateEpsilonProductions(self):
+        """Elimina de epsilon produções"""
+        
+        debug = False
+        if debug:
+            print("--> entering eliminateEpsilonProductions")
+
+        # Lista de não-terminais anuláveis
+        nullable = list()
+        
+        ### Primeiro, encontra-se os não-terminais anuláveis
+
+        possiblyNullableProductions = dict()
+
+        # Primeira passagem pelos não-terminais. 
+        # Identifica os anuláveis triviais (que contém '&' nas produções)
+        # E as produções que podem ser descobertas anuláveis nas próximas passagens.
+        for nonTerminal in self.N:
+
+            # Produções possivelmente anuláveis de nonTerminal
+            possiblyNullableProductions[nonTerminal] = list()
+            
+            for production in self.P[nonTerminal]:
+                if production[0] is '&':
+                    nullable.append(nonTerminal)
+                    break
+
+                possiblyNullableProduction = True
+                for symbol in production:
+                    if symbol in self.T:
+                        possiblyNullableProduction = False
+                        break
+                    
+                if possiblyNullableProduction:
+                    possiblyNullableProductions[nonTerminal].append(production)
+
+        # Agora vamos revisar os  não-terminais repetidamente até que nenhum novo
+        # não terminal anulável tenha sido descoberto
+        previousNullableLen = len(nullable)
+        while True:
+            for nonTerminal in [nonTerminal for nonTerminal in self.N if nonTerminal not in nullable]:
+                for production in possiblyNullableProductions[nonTerminal]:
+                    for symbol in production:
+                        if symbol not in nullable:
+                            break
+                    else:
+                        nullable.append(nonTerminal)
+                        break
+            if previousNullableLen == len(nullable):
+                break
+            else:
+                previousNullableLen = len(nullable)
+
+        if debug:
+            print(f"nullables found: {nullable}")
+
+        # Agora vamos substituir as produções com não-terminais anuláveis
+        # por todos os seus arranjos com e sem esses não-terminais
+        newProductions = dict()
+        for nonTerminal in self.N:
+
+            if debug:
+                print(f"For non-terminal {nonTerminal} with productions {self.P[nonTerminal]}:")
+
+            newProductions[nonTerminal] = list()
+
+            for production in self.P[nonTerminal]:
+
+                if production == ['&']:
+                    break
+
+                partialProductions = list()
+                partialProductions.append(['&'])
+
+                for symbol in production:
+
+                    if debug:
+                        print(f"in production {production}")
+                        print(f"reading symbol {symbol}")
+
+                    nextPartialProductions = partialProductions.copy()
+
+                    for partProd in partialProductions:
+
+                        if partProd == ['&']:
+                            if symbol not in nullable:
+                                nextPartialProductions.remove(['&'])
+                            nextPartialProductions.append([symbol])
+
+                        else:
+                            if symbol not in nullable:
+                                nextPartialProductions.remove(partProd)
+                            temp = partProd.copy()
+                            temp.append(symbol)
+                            nextPartialProductions.append(temp)
+
+                    partialProductions = nextPartialProductions
+
+                    if debug:
+                        print(f"PartialProductions: {partialProductions}")
+
+                for prod in partialProductions:
+                    for prod2 in newProductions:
+                        if prod == prod2:
+                            break
+                    else:
+                        newProductions[nonTerminal].append(prod)
+
+            if debug:
+                print(f"productions for {nonTerminal} before: {self.P[nonTerminal]}")
+                print(f"productions for {nonTerminal} later: {newProductions[nonTerminal]}")
+
+        self.P = newProductions
+
     def eliminateLeftRecursion(self):
         """Retorna uma gramática equivalente, eliminando recursão a esquerda"""
 
+        debug = False
+        if debug:
+            print("--> entering eliminateLeftRecursion")
+
         def eliminateDirectLeftRecursion(nonTerminal, P=self.P):
             """ Utilitário para eliminação de recursão direta"""
+
+            if debug:
+                print(f"entering eliminateDirectLeftRecursion for {nonTerminal}")
+                print(f"productions before: {P[nonTerminal]}")
+
             alphas = list()
             betas = list()
             ntDash = f"{nonTerminal}\'"
+            epsilonFlag = False
+            
             for production in P[nonTerminal]:
                 if production[0] is nonTerminal:
-                    alphas.append(production[1:])
-                elif production[0] == '&':
-                    pass
+                    alpha = production[1:].copy()
+                    alpha.append(ntDash)
+                    alphas.append(alpha)
+                elif production == ['&']:
+                    betas.append(['&'])
                 else:
-                    betas.append(production)
-            ntProductions = [beta.append(ntDash) for beta in betas]
-            ntDashProductions = [alpha.append(ntDash) for alpha in alphas].append('&')
+                    beta = production.copy()
+                    beta.append(ntDash)
+                    betas.append(beta)
+            
+            if len(alphas) > 0:
+                alphas.append(['&'])
 
-            return ntProductions, ntDashProductions, ntDash
+                P[ntDash] = alphas
+                P[nonTerminal] = betas
+                
+                if debug:
+                    print("new productions:")
+                    print(f"P[{nonTerminal}]: {P[nonTerminal]}")
+                    print(f"P[{ntDash}]: {P[ntDash]}")
 
-        def eliminateEpsilonProductions(N, P):
-            """Utilitário para eliminação de epsilon produções"""
-            for nonTerminal in N:
-                for production in P[nonTerminal]:
-                    productionBag = list()
-                    hasEpsilonProduction = False
-                    if production[0] == '&':
-                        hasEpsilonProduction = True
-                    else:
-                        productionBag.push(production)
-
-        newN = list()
-        newP = dict()
+            elif debug:
+                print("no direct left recursion found. Nothing changed.")
 
         # elimina recursoes diretas
         for nonTerminal in self.N:
-            ntP, ntDashP, ntDash = eliminateDirectLeftRecursion(nonTerminal)
-            newN.push(nonTerminal)
-            newN.push(ntDash)
-            newP[nonTerminal] = ntP
-            newP[ntDash] = ntDashP
+            eliminateDirectLeftRecursion(nonTerminal)
 
         # elimina &-producoes
-        eliminateEpsilonProductions(newN, newP)
+        self.eliminateEpsilonProductions()
 
         # elimina recursoes indiretas
-        newNewN = list()
+        if debug:
+            print("--> initiating indirect recursion removal")
+
+        newN = self.N.copy()
+        newP = self.P.copy()
         nonTerminalEnumeration = enumerate(newN)
         for (i, nonTerminali) in nonTerminalEnumeration:
             for nonTerminalj in [nonTerminalj for j, nonTermninalj in nonTerminalEnumeration if j < i]:
@@ -508,16 +633,13 @@ class GLC:
                     if production[0] is nonTerminalj:
                         newP[nonTerminali].remove(production)
                         for productionBeta in newP[nonTerminalj]:
-                            newP[nonTerminali].append(productionBeta.append(production[1:]))
-            (ntP, ntDashP, ntDash) = eliminateDirectLeftRecursion(nonTerminali, newP)
-            newNewN.push(nonTerminali)
-            newNewN.push(ntDash)
-            newP[nonTerminal] = ntP
-            newP[ntDash] = ntDashP
-        newN = newNewN
+                            productionBeta = productionBeta.copy()
+                            productionBeta.append(production[1:].copy())
+                            newP[nonTerminali].append(productionBeta)
+            eliminateDirectLeftRecursion(nonTerminali, newP)
 
         # elimina &-producoes
-        eliminateEpsilonProductions(newN, newP)
+        # self.eliminateEpsilonProductions()
 
         return GLC(newN, self.T, self.S, newP, self.name)
 
