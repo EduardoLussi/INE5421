@@ -611,8 +611,7 @@ class GLC:
             self.__remove_direct_non_determinism()
             if show_steps and changed:
                 print(self)
-            iters -= 1
-            if not changed or not iters > 0:
+            if not changed:
                 break
         else:
             if show_steps:
@@ -722,5 +721,4 @@ class GLC:
                 for d in derivations:
                     if d not in self.P[s]:  # precisamos deste if por estarmos usando lists e não sets
                         self.P[s].append(d)
-        # remove nõa-determinismos diretos pre-existentes e criados pela derivação
         return changed
