@@ -411,14 +411,10 @@ while True:  # Loop principal do programa
 
         steps = True if input("Deseja ver o passo a passo? [s/N]\n").strip() in ['S', 's', 'sim'] else False
 
-        try:
-            if grammar.llRecognizeSentence(sentence, show_steps=steps):
-                print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
-            else:
-                print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
-        except:
+        if grammar.llRecognizeSentence(sentence.split(' '), show_steps=steps):
+            print(f"\n\033[1;32mGramática {grammar.name} reconhece {sentence}!\033[0;0m")
+        else:
             print(f"\n\033[1;31mGramática {grammar.name} não reconhece {sentence}!\033[0;0m")
-
         input("\nPressione enter para continuar...")
 
     elif op == 18:

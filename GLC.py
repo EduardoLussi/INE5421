@@ -20,7 +20,7 @@ class GLC:
         self.N = N if N else list()
         self.T = T if T else list()
         self.S = S if S else list()
-        self.P = P if P else list()
+        self.P = P if P else dict()
 
         self.name = name
 
@@ -94,7 +94,7 @@ class GLC:
         debug = False
 
         for terminal in self.T:  # FIRST de um terminal é o próprio terminal
-            self._first[terminal] = set([terminal])
+            self._first[terminal] = {terminal}
 
         for nonTerminal in self.N:  # Definição dos first de cada não-terminal
             self._first[nonTerminal] = set()
@@ -454,9 +454,7 @@ class GLC:
 
     def llRecognizeSentence(self, sentence, show_steps=False):
         """Reconhece sentença via implementação de um analisador LL(1)"""
-
         table = self.generateLLparseTable()
-
         if show_steps:
             from pandas import DataFrame
             print(f"\nMostrando passos para o reconhecimento da sentença {' '.join(sentence)} com a gramática:")
@@ -464,13 +462,17 @@ class GLC:
             print('Conjuntos FIRST')
             for symbol, firsts in self._first.items():
                 print(f'FIRST({symbol}) = {firsts}')
+
+            print('Conjuntos FOLLOW')
+            for symbol, follow in self._follow.items():
+                print(f'FOLLOW({symbol}) = {follow}')
+
             print('\nTabela de transição LL(1)')
             print(DataFrame(table).transpose().fillna('-'))
             print()
 
         stack = ["$", self.S]
         sentence += '$'  # adiciona fim da leitura
-
         i = 0
         symbol = sentence[i]
         while stack != ['$'] and i < len(sentence):
@@ -502,7 +504,6 @@ class GLC:
         self.setFirst()
         self.setFollow()
         table = {}
-
         # itero sobre as produções de cada terminal da gramática
         for non_terminal, productions in self.P.items():
             table[non_terminal] = {}
@@ -596,11 +597,9 @@ class GLC:
 
     """ ---------------- FATORAÇÃO ----------------- """
 
-    def left_factoring(self, *, iters=1):
+    def left_factoring(self, *, iters=10):
         """Fatoração de GLC"""
         while iters > 0 and self.__remove_indirect_non_determinism():
-            self.__remove_indirect_non_determinism()
-            self.__remove_direct_non_determinism()
             iters -= 1
 
     def __remove_direct_non_determinism(self):
@@ -609,9 +608,14 @@ class GLC:
         Para cada não-terminal, busca produções que comecem com o(s) mesmo(s) símbolo(s).
         Para cada produção salva, elimina não determinismo.
         """
-        direct = {}
+        def test_prefixing(substring1, substring2):
+            for sub1, sub2 in zip(substring1, substring2):
+                if sub1 != sub2:
+                    return False
+            return True
+
         for non_terminal in self.N:
-            direct[non_terminal] = []
+            prefixes = []
             productions = self.P[non_terminal]
             for i, prod1 in enumerate(productions):
                 for _, prod2 in enumerate(productions[i + 1:]):
@@ -621,21 +625,15 @@ class GLC:
                         if p1 != p2:
                             break
                         prefix.append(p1)
-                    if prefix and prefix not in direct[non_terminal]:
-                       direct[non_terminal].append(prefix)
+                    if prefix and prefix not in prefixes:
+                        prefixes.append(prefix)
+                        break
 
-        def test_prefixing(substring1, substring2):
-            for sub1, sub2 in zip(substring1, substring2):
-                if sub1 != sub2:
-                    return False
-            return True
-
-        for non_terminal, prefixes in direct.items():
             if not prefixes:
                 continue
             productions = list()
-            for i, prefix in enumerate(prefixes):
-                new_symbol = f"{non_terminal}'{i}"
+            for prefix in prefixes:
+                new_symbol = f"{non_terminal}'"
                 self.N.append(new_symbol)
                 if prefix + [new_symbol] not in productions:
                     productions.append(prefix + [new_symbol])
@@ -659,32 +657,61 @@ class GLC:
                     productions.append(production)
             self.P[non_terminal] = productions
 
-    def __remove_indirect_non_determinism(self):
-        """
-        Remove não determinismos indiretos, por substituição.
+    def derive(self, prod):
+        """Gera lista de cadeias derivadas da produção"""
+        if not prod:
+            return [[]]
+        prod_ = prod[0]
+        if prod_ in self.T:
+            return [[prod_] + derivation for derivation in self.derive(prod[1:])]
+        elif prod_ in self.P:
+            out = []
+            derivations = self.derive(prod[1:])
+            for p in self.P[prod_]:
+                if p == ['&']:
+                    out += derivations
+                else:
+                    if derivations:
+                        out += [p + deriv for deriv in derivations]
+                    else:
+                        out += p
+            return out
 
-        Normalmente, se faria a substituição somente dos não-terminais que fossem
-        gerar o não determinismo.
-        Neste caso, não fazemos esta busca, optando-se por este algoritmo mais simples,
-        que realiza a substituição não recursiva de todos os terminais. Se houver algum
-        determinismo direto, ele pode ser eliminado pelo algoritmo que remove os diretos.
-        """
-        non_terminals = self.N
-        derived = copy.deepcopy(self)
-        for origin, productions in self.P.items():
-            for production in productions:
-                changed = False
-                for i, symbol in enumerate(production):
-                    if symbol in non_terminals:
-                        if symbol == origin:
-                            continue
-                        if production in productions:
-                            derived.P[origin].remove(production)
-                        for prod in self.P[symbol][:]:
-                            replaced = production[:i] + prod + production[i + 1:]
-                            if replaced not in productions:
-                                derived.P[origin].append(replaced)
-                                changed = True
-                    if changed:
-                        break
-        self.P = derived.P
+    def __remove_indirect_non_determinism(self):
+        """ Identifica e remove os indeterminismos indiretos utilizando os conjuntos FIRST"""
+
+        def get_firsts_chain(chain):
+            """Helper para atualizar e buscar o first do primeiro simbolo da cadeia"""
+            self.setFirst()
+            return list(self._first[chain[0]])
+
+        changed = False
+        # busca não-determinismos indiretos e os elimina
+        for s in self.P:
+            aux = []
+            worrisome = set()
+            for prod in self.P[s]:
+                firsts = get_firsts_chain(prod)
+                # faz a intersecção com o first de uma produção salva
+                for a in aux:
+                    if len(set(firsts).intersection(a[1])) > 0:
+                        worrisome.add(tuple(prod))
+                        worrisome.add(tuple(a[0]))
+                        changed = True
+                for i, symbol in enumerate(prod[:-1]):
+                    if symbol in self.N and '&' in self._first[symbol]:
+                        if len(self._first[symbol].intersection(get_firsts_chain(prod[i + 1:]))) > 0:
+                            worrisome.add(prod)
+                            changed = True
+                aux.append((prod, firsts))
+            for prod in worrisome:
+                self.P[s].remove(list(prod))
+            for prod in worrisome:
+                derivations = self.derive(list(prod))
+                for d in derivations:
+                    if d not in self.P[s]:  # precisamos deste if por estarmos usando lists e não sets
+                        self.P[s].append(d)
+        print(self)
+        # remove nõa-determinismos diretos pre-existentes e criados pela derivação
+        self.__remove_direct_non_determinism()
+        return changed
