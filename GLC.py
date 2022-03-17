@@ -597,18 +597,33 @@ class GLC:
 
     """ ---------------- FATORAÇÃO ----------------- """
 
-    def left_factoring(self, *, iters=10):
+    def left_factoring(self, *, iters=10, show_steps=False):
         """Fatoração de GLC"""
         #podemos comçear removendo determinismos diretos, para facilitar o trabalho
+        if show_steps:
+            print("Fatoração da gramática")
+            print(self)
         self.__remove_direct_non_determinism()
-        print(self)
-        while iters > 0 and self.__remove_indirect_non_determinism():
+        if show_steps:
             print(self)
+        for _ in range(iters):
+            changed = self.__remove_indirect_non_determinism()
             self.__remove_direct_non_determinism()
-            print(self)
+            if show_steps and changed:
+                print(self)
             iters -= 1
+            if not changed or not iters > 0:
+                break
+        else:
+            if show_steps:
+                print('gramática não foi fatorada')
+            return False
+        if show_steps:
+            print('gramática foi fatorada')
+        return True
 
     def __remove_direct_non_determinism(self):
+        """Remoção de não determinismo direto"""
         productions = self.P
         new_productions = {}
         for non_terminal in productions:
@@ -625,19 +640,21 @@ class GLC:
                         if p1 != p2:
                             break
                         prefix.append(p1)
-                    if prefix and prefix not in prefixes:
+                    if prefix and not found_pref:
                         prefixes[i] = prefix
                         found_pref = True
                 if not found_pref:
                     prefixes.append(prod1)
-            for i, pref in enumerate(prefixes):
+            count = 1
+            for pref in prefixes:
                 prod_aux = []
                 for prod in productions[non_terminal]:
                     # testamos se a produção começa com o prefixo salvo em pref
                     if len(pref) <= len(prod) and pref == prod[:len(pref)]:
                         prod_aux.append(prod)
                 if len(prod_aux) > 1:
-                    new_symbol = non_terminal + (i+1)*"'"
+                    new_symbol = non_terminal + count*"'"
+                    count += 1
                     self.N.append(new_symbol)
                     new_prod = pref + [new_symbol]
                     if new_prod not in new_productions[non_terminal]:
