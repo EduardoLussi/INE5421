@@ -1,0 +1,13 @@
+#nonterminals
+S
+A
+#terminals
+a
+b
+c
+d
+#start
+S
+#productions
+S ::= A a | S b
+A ::= S c | d
